@@ -2,6 +2,7 @@ package com.smartcampus.backend.service;
 
 import com.smartcampus.backend.dto.TicketRequest;
 import com.smartcampus.backend.dto.TicketResponse;
+import com.smartcampus.backend.dto.TicketStatusRequest;
 import com.smartcampus.backend.model.Ticket;
 import com.smartcampus.backend.model.TicketPriority;
 import com.smartcampus.backend.model.TicketStatus;
@@ -110,6 +111,31 @@ public class TicketService {
         // Delegate to CloudinaryService
         List<String> uploadedUrls = cloudinaryService.uploadImages(filesToUpload);
         ticket.getImageUrls().addAll(uploadedUrls);
+
+        return mapToResponse(ticketRepository.save(ticket));
+    }
+
+    // ── UPDATE STATUS ────────────────────────────────────────────────────────
+    
+    public TicketResponse updateTicketStatus(String id, TicketStatusRequest request) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+
+        if (request.getStatus() != null) {
+            ticket.setStatus(request.getStatus());
+        }
+        
+        if (request.getAssignedTechnician() != null) {
+            ticket.setAssignedTechnician(request.getAssignedTechnician());
+        }
+        
+        if (request.getResolutionNotes() != null) {
+            ticket.setResolutionNotes(request.getResolutionNotes());
+        }
+        
+        if (request.getRejectionReason() != null) {
+            ticket.setRejectionReason(request.getRejectionReason());
+        }
 
         return mapToResponse(ticketRepository.save(ticket));
     }

@@ -12,9 +12,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Resources />} />
-          <Route path="tickets" element={<TicketList />} />
+          <Route path="tickets" element={<TicketList isAdmin={true} />} />
           <Route path="tickets/new" element={<TicketCreate />} />
-          <Route path="tickets/:id" element={<TicketDetail />} />
+          <Route path="tickets/:id" element={<TicketDetail isAdmin={true} />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -2,6 +2,7 @@ package com.smartcampus.backend.controller;
 
 import com.smartcampus.backend.dto.TicketRequest;
 import com.smartcampus.backend.dto.TicketResponse;
+import com.smartcampus.backend.dto.TicketStatusRequest;
 import com.smartcampus.backend.model.TicketPriority;
 import com.smartcampus.backend.model.TicketStatus;
 import com.smartcampus.backend.service.TicketService;
@@ -56,5 +57,13 @@ public class TicketController {
     public ResponseEntity<List<TicketResponse>> getMyTickets(
             @RequestParam(required = false) TicketStatus status) {
         return ResponseEntity.ok(ticketService.getMyTickets(status));
+    }
+
+    // PATCH /api/tickets/{id}/status — admin/technician updates status
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TicketResponse> updateTicketStatus(
+            @PathVariable String id,
+            @RequestBody TicketStatusRequest request) {
+        return ResponseEntity.ok(ticketService.updateTicketStatus(id, request));
     }
 }
