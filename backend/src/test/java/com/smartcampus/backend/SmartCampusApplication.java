@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 
 @SpringBootApplication
-@EnableMongoAuditing  // ← this was missing
+@EnableMongoAuditing   // needed for @CreatedDate and @LastModifiedDate in Ticket.java
 public class SmartCampusApplication {
 
     public static void main(String[] args) {
