@@ -110,8 +110,7 @@ const Hero = () => {
             </h1>
 
             <p className="hero__subtext">
-              A centralized platform for booking university facilities, reporting
-              maintenance issues, and tracking campus operations — all in one place.
+              Centralized system for booking facilities and reporting campus issues.
             </p>
 
             <div className="hero__actions">
@@ -124,7 +123,7 @@ const Hero = () => {
                 </svg>
                 Book a Resource
               </a>
-              <a href="#tickets" className="btn-secondary" id="hero-report-btn">
+              <a href="#dashboard" className="btn-secondary" id="hero-report-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />

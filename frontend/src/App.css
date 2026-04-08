@@ -247,13 +247,14 @@
   left: 0;
   right: 0;
   padding: 20px 24px;
-  background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%);
+  background-color: rgba(248, 250, 252, 0.95);
+  border-top: 1px solid var(--color-border);
 }
 
 .carousel__caption-text {
   font-size: 0.875rem;
   font-weight: 500;
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text-primary);
 }
 
 .carousel__nav {
@@ -334,7 +335,7 @@
   align-items: flex-start;
   gap: var(--sp-2);
   padding: var(--sp-4);
-  background-color: var(--color-bg);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-xs);
@@ -646,3 +647,119 @@
   transition: color 0.15s;
 }
 .footer__policy-link:hover { color: var(--color-primary); }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .navbar__inner {
+    height: auto;
+    min-height: 64px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .hero__grid,
+  .footer__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .container {
+    padding: 0 var(--sp-3);
+  }
+
+  .navbar__title span {
+    display: none;
+  }
+
+  .navbar__nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .hero {
+    padding: var(--sp-8) 0;
+  }
+
+  .hero__heading {
+    font-size: 2.4rem;
+  }
+
+  .hero__meta {
+    justify-content: space-between;
+    gap: var(--sp-2);
+  }
+
+  .features__grid,
+  .stats__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+}
+
+@media (max-width: 680px) {
+  .container {
+    padding: 0 var(--sp-2);
+  }
+
+  .navbar__title {
+    font-size: 0.84rem;
+  }
+
+  .btn-login {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .hero__heading {
+    font-size: 2rem;
+  }
+
+  .hero__subtext {
+    font-size: 0.95rem;
+    margin-bottom: var(--sp-4);
+  }
+
+  .hero__actions {
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .carousel__slide {
+    height: 300px;
+  }
+
+  .quick-actions__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-card,
+  .feature-card,
+  .stat-card {
+    padding: var(--sp-3);
+  }
+
+  .footer__bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-1);
+  }
+}

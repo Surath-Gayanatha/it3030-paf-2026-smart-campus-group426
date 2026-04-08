@@ -3,7 +3,7 @@ const Navbar = () => {
     { label: 'Home', href: '#', active: true },
     { label: 'Resources', href: '#resources' },
     { label: 'Bookings', href: '#bookings' },
-    { label: 'Tickets', href: '#tickets' },
+    { label: 'Tickets', href: '#dashboard' },
     { label: 'Dashboard', href: '#dashboard' },
   ];
 
