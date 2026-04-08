@@ -39,7 +39,6 @@ public class OAuth2AuthenticationSuccessHandler
         String name = oauth2User.getAttribute("name");
         String picture = oauth2User.getAttribute("picture");
 
-        // Check if user exists, if not create new user
         Optional<User> existingUser = userRepository.findByEmail(email);
 
         User user;
@@ -56,14 +55,13 @@ public class OAuth2AuthenticationSuccessHandler
             user = existingUser.get();
         }
 
-        // Generate JWT token
         String token = jwtTokenProvider.generateToken(
                 user.getEmail(),
                 user.getRole().name()
         );
 
-        // Redirect to frontend with token
-        String redirectUrl = FRONTEND_URL + "?token=" + token;
+        // This line is INSIDE the method
+        String redirectUrl = FRONTEND_URL + "/oauth2/redirect?token=" + token;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
