@@ -1,23 +1,49 @@
-import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout";
-import Resources from "./pages/Resources";
-import TicketList from "./pages/TicketList";
-import TicketCreate from "./pages/TicketCreate";
-import TicketDetail from "./pages/TicketDetail";
+import './App.css';
+import { Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import AdminRoute from './components/AdminRoute';
+import Hero from './components/Hero';
+import QuickActions from './components/QuickActions';
+import Features from './components/Features';
+import Stats from './components/Stats';
+import Footer from './components/Footer';
+import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
+import AdminPanel from './pages/AdminPanel';
+
+const HomePage = () => {
+  return (
+    <>
+      <main>
+        <Hero />
+        <QuickActions />
+        <Features />
+        <Stats />
+      </main>
+      <Footer />
+    </>
+  );
+};
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Resources />} />
-          <Route path="tickets" element={<TicketList isAdmin={true} />} />
-          <Route path="tickets/new" element={<TicketCreate />} />
-          <Route path="tickets/:id" element={<TicketDetail isAdmin={true} />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <div>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+          <Route
+            path="/admin"
+            element={(
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            )}
+          />
+        </Routes>
+      </div>
+    </AuthProvider>
   );
 }
 
