@@ -1,0 +1,17 @@
+# ============================================================
+# SETUP GUIDE FOR TEAMMATES
+# ============================================================
+# 1. Copy this file and rename the copy to: application-local.properties
+# 2. Fill in your real credentials in the new file
+# 3. NEVER commit application-local.properties to Git
+# ============================================================
+
+# MongoDB
+spring.mongodb.uri=mongodb+srv://<DB_USERNAME>:<DB_PASSWORD>@cluster0.1rlaikr.mongodb.net/?appName=Cluster0
+
+# Google OAuth2 (Get from Google Cloud Console)
+spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+
+# JWT Secret (generate a long random hex string)
+jwt.secret=YOUR_JWT_SECRET_HEX_STRING

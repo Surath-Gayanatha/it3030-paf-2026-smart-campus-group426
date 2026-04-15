@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 .idea/
 node_modules/
 target/
+
+# Application local secrets (never commit)
+backend/src/main/resources/application-local.properties
