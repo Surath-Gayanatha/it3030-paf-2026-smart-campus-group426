@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/axiosConfig';
 import ResourceCard from './ResourceCard';
 
-const ResourceCatalog = () => {
+const ResourceCatalog = ({ refreshSignal }) => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -30,7 +30,7 @@ const ResourceCatalog = () => {
 
   useEffect(() => {
     fetchResources();
-  }, [filters]);
+  }, [filters, refreshSignal]);
 
   const handleFilterChange = (e) => {
     setFilters({
@@ -89,7 +89,10 @@ const ResourceCatalog = () => {
                 <ResourceCard key={resource.id} resource={resource} />
               ))
             ) : (
-              <div className="no-results">No resources found matching your criteria.</div>
+              <div className="no-results">
+                <h3>No facilities found</h3>
+                <p>Try a different filter or add a new facility using the form on the right.</p>
+              </div>
             )}
           </div>
         )}

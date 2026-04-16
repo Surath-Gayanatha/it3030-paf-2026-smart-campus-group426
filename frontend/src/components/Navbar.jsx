@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const navLinks = useMemo(() => [
     { label: 'Home', href: '/' },
-    { label: 'Resources', href: '/resources' },
+    { label: 'Facilities', href: '/resources' },
     { label: 'Bookings', href: '/bookings' },
     { label: 'Tickets', href: '/tickets' },
     { label: 'Dashboard', href: '/dashboard' },

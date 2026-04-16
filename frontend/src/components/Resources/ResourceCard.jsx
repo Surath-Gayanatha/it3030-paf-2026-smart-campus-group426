@@ -1,6 +1,9 @@
 import React from 'react';
 
 const ResourceCard = ({ resource }) => {
+  const statusLabel = resource.status ? resource.status.replace('_', ' ') : 'UNKNOWN';
+  const statusClass = resource.status ? resource.status.toLowerCase() : 'unknown';
+
   return (
     <div className="resource-card">
       <div className="resource-card__image-container">
@@ -9,8 +12,8 @@ const ResourceCard = ({ resource }) => {
           alt={resource.name} 
           className="resource-card__image"
         />
-        <div className={`resource-card__status resource-card__status--${resource.status.toLowerCase()}`}>
-          {resource.status.replace('_', ' ')}
+        <div className={`resource-card__status resource-card__status--${statusClass}`}>
+          {statusLabel}
         </div>
       </div>
       <div className="resource-card__content">
@@ -30,7 +33,7 @@ const ResourceCard = ({ resource }) => {
         </div>
         <p className="resource-card__description">{resource.description}</p>
         <div className="resource-card__footer">
-          <button className="btn btn--primary btn--sm">Book Now</button>
+          <button className="btn btn--primary btn--sm">View facility</button>
         </div>
       </div>
     </div>
