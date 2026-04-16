@@ -37,6 +37,13 @@
   font-size: 1.025rem;
 }
 
+.facility-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
 .facility-hero__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -98,24 +105,76 @@
   line-height: 1.5;
 }
 
+
 .facilities-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-  gap: 2rem;
-  align-items: start;
+  margin-top: 1rem;
 }
 
-.facilities-layout__main,
-.facilities-layout__sidebar {
-  min-width: 0;
+.facility-page-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.facility-page-intro p {
+  max-width: 60ch;
+}
+
+.facility-create-page {
+  padding-bottom: 0;
+}
+
+.facility-create-hero {
+  padding: 4rem 0 2rem;
+}
+
+.facility-create-hero__layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.facility-create-hero__copy,
+.facility-create-hero__panel {
+  padding: 2rem;
+  border-radius: 1.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+.facility-create-hero__copy h1 {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  margin: 0.5rem 0 1rem;
+}
+
+.facility-create-hero__links {
+  margin-top: 1.5rem;
+}
+
+.facility-create-hero__panel h2 {
+  font-size: 1.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.facility-create-hero__panel ul {
+  display: grid;
+  gap: 0.9rem;
+  padding-left: 1.15rem;
+  list-style: disc;
+}
+
+.facility-create-layout {
+  padding-bottom: 4rem;
 }
 
 .facility-form-card {
-  position: sticky;
-  top: 88px;
   padding: 1.5rem;
   border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   border: 1px solid #e5e7eb;
   box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
 }
@@ -417,6 +476,36 @@
   overflow: hidden;
 }
 
+.resource-card__availability {
+  margin-top: -0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.resource-card__availability-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 0.6rem;
+}
+
+.resource-card__availability-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.resource-card__availability-pill {
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .resource-card__footer {
   margin-top: auto;
 }
@@ -462,16 +551,17 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .facility-hero__layout,
-  .facilities-layout {
+  .facility-create-hero__layout {
     grid-template-columns: 1fr;
-  }
-
-  .facility-form-card {
-    position: static;
   }
 
   .facility-hero__gallery {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .facility-page-intro {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .filter-bar {
@@ -486,11 +576,14 @@
 @media (max-width: 768px) {
   .facility-hero__stats,
   .facility-hero__gallery,
-  .facility-form__grid {
+  .facility-form__grid,
+  .facility-create-hero__layout {
     grid-template-columns: 1fr;
   }
 
   .facility-hero__copy,
+  .facility-create-hero__copy,
+  .facility-create-hero__panel,
   .facility-form-card {
     padding: 1.25rem;
   }

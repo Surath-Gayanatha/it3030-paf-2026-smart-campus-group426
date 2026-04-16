@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../../utils/axiosConfig';
 import ResourceCard from './ResourceCard';
 
-const ResourceCatalog = ({ refreshSignal }) => {
+const ResourceCatalog = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -30,7 +30,7 @@ const ResourceCatalog = ({ refreshSignal }) => {
 
   useEffect(() => {
     fetchResources();
-  }, [filters, refreshSignal]);
+  }, [filters]);
 
   const handleFilterChange = (e) => {
     setFilters({
@@ -44,7 +44,7 @@ const ResourceCatalog = ({ refreshSignal }) => {
       <div className="container">
         <div className="section-header">
           <h2 className="section-title">Facilities & Assets</h2>
-          <p className="section-subtitle">Discover and book the best tools and spaces for your academic journey.</p>
+          <p className="section-subtitle">Discover the best tools and spaces for your academic journey.</p>
         </div>
 
         <div className="filter-bar">

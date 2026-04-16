@@ -10,6 +10,7 @@ const Navbar = () => {
   const navLinks = useMemo(() => [
     { label: 'Home', href: '/' },
     { label: 'Facilities', href: '/resources' },
+    { label: 'Add Facility', href: '/facilities/create' },
     { label: 'Bookings', href: '/bookings' },
     { label: 'Tickets', href: '/tickets' },
     { label: 'Dashboard', href: '/dashboard' },
@@ -23,6 +24,8 @@ const Navbar = () => {
         .slice(0, 2)
         .toUpperCase()
     : 'SC';
+
+  const createNavId = (label) => `nav-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
     <nav className="navbar" role="navigation" aria-label="Main navigation">
@@ -49,7 +52,7 @@ const Navbar = () => {
                 to={link.href}
                 className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
                 role="menuitem"
-                id={`nav-${link.label.toLowerCase()}`}
+                id={createNavId(link.label)}
               >
                 {link.label}
               </NavLink>

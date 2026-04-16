@@ -3,6 +3,7 @@ import React from 'react';
 const ResourceCard = ({ resource }) => {
   const statusLabel = resource.status ? resource.status.replace('_', ' ') : 'UNKNOWN';
   const statusClass = resource.status ? resource.status.toLowerCase() : 'unknown';
+  const availabilityWindows = resource.availabilityWindows || [];
 
   return (
     <div className="resource-card">
@@ -32,6 +33,16 @@ const ResourceCard = ({ resource }) => {
           </div>
         </div>
         <p className="resource-card__description">{resource.description}</p>
+        {availabilityWindows.length > 0 && (
+          <div className="resource-card__availability">
+            <span className="resource-card__availability-label">Availability</span>
+            <div className="resource-card__availability-list">
+              {availabilityWindows.map((window) => (
+                <span key={window} className="resource-card__availability-pill">{window}</span>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="resource-card__footer">
           <button className="btn btn--primary btn--sm">View facility</button>
         </div>

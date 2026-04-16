@@ -12,6 +12,7 @@ import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
 
 import Resources from './pages/Resources';
+import AddFacility from './pages/AddFacility';
 
 const HomePage = () => {
   return (
@@ -35,6 +36,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/facilities/create" element={<AddFacility />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
           <Route
             path="/admin"

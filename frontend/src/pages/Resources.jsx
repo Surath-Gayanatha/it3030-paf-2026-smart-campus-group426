@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import ResourceCatalog from '../components/Resources/ResourceCatalog';
-import ResourceForm from '../components/Resources/ResourceForm';
 import Footer from '../components/Footer';
 import './Resources.css';
 
@@ -34,22 +33,21 @@ const stats = [
 ];
 
 const Resources = () => {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const refreshCatalog = () => {
-    setRefreshKey((current) => current + 1);
-  };
-
   return (
     <div className="resources-page">
       <section className="facility-hero">
         <div className="container facility-hero__layout">
           <div className="facility-hero__copy">
             <p className="section-label">Facilities Catalogue</p>
-            <h1>Browse campus spaces with visual previews and add new facilities in seconds.</h1>
+            <h1>Browse campus spaces with visual previews, details, and booking-ready information.</h1>
             <p>
-              Discover lecture halls, labs, meeting rooms, and equipment through image cards that make it easy for users to explore and contribute new facilities.
+              Discover lecture halls, labs, meeting rooms, and equipment through image cards that show the key information students need at a glance.
             </p>
+
+            <div className="facility-hero__actions">
+              <Link to="/facilities/create" className="btn-primary">Add a facility</Link>
+              <a href="#resources" className="btn-secondary">Explore facilities</a>
+            </div>
 
             <div className="facility-hero__stats">
               {stats.map((stat) => (
@@ -76,12 +74,7 @@ const Resources = () => {
       </section>
 
       <main className="container facilities-layout">
-        <div className="facilities-layout__main">
-          <ResourceCatalog refreshSignal={refreshKey} />
-        </div>
-        <aside className="facilities-layout__sidebar">
-          <ResourceForm onCreated={refreshCatalog} />
-        </aside>
+        <ResourceCatalog />
       </main>
 
       <Footer />
