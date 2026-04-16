@@ -138,26 +138,28 @@ This project satisfies the **IT3030 – PAF Assignment requirements**:
 
 ## 📂 Project Structure
 
-
-it3030-paf-2026-smart-campus-group426
+```
+it3030-paf-2026-smart-campus-groupXX/
 │
-├── backend/ (Spring Boot REST API)
-│   ├── src/main/java/com/smartcampus/
-│   │   ├── controller/        # REST Controllers (API endpoints)
-│   │   ├── service/           # Business logic layer
-│   │   ├── repository/        # MongoDB repositories
-│   │   ├── model/             # Data models (Entities)
-│   │   ├── dto/               # Data Transfer Objects
-│   │   ├── config/            # Security & configurations
-│   │   └── SmartCampusApplication.java
-│   │
-│   ├── src/main/resources/
-│   │   ├── application.properties   # DB & server configs
-│   │   └── static/                  # Static files (if used)
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/smartcampus/
+│   │   │   │   ├── controller/        # REST Controllers (API endpoints)
+│   │   │   │   ├── service/           # Business logic layer
+│   │   │   │   ├── repository/        # MongoDB repositories
+│   │   │   │   ├── model/             # Data models (Entities)
+│   │   │   │   ├── dto/               # Data Transfer Objects
+│   │   │   │   ├── config/            # Security & configurations
+│   │   │   │   └── SmartCampusApplication.java
+│   │   │
+│   │   ├── resources/
+│   │   │   ├── application.properties   # DB & server configs
+│   │   │   └── static/                  # Static files (if used)
 │   │
 │   └── pom.xml
 │
-├── frontend/ (Client Web Application)
+├── frontend/
 │   ├── css/                  # Stylesheets
 │   ├── js/                   # JavaScript logic
 │   ├── pages/                # HTML pages
@@ -170,3 +172,4 @@ it3030-paf-2026-smart-campus-group426
 ├── docs/                     # Reports, diagrams, screenshots
 │
 └── README.md
+```
