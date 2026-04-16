@@ -230,6 +230,44 @@
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
+.facility-form__upload {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.facility-form__upload input[type='file'] {
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.facility-form__helper {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.facility-form__file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.facility-form__preview {
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  background: white;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.facility-form__preview img {
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
 .facility-form__field textarea {
   resize: vertical;
   min-height: 120px;

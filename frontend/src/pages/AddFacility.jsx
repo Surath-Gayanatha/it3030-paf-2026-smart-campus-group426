@@ -5,7 +5,7 @@ import './Resources.css';
 
 const highlights = [
   'Publish lecture halls, labs, rooms, and equipment in one place.',
-  'Attach an image URL so the catalogue stays visual and easy to scan.',
+  'Upload an image from your desktop or attach an image URL.',
   'Keep the public facilities page clean while admins or staff add entries separately.',
 ];
 
@@ -18,7 +18,7 @@ const AddFacility = () => {
             <p className="section-label">Create Facility</p>
             <h1>Add a new campus facility with a focused, easy-to-use form.</h1>
             <p>
-              Use this page to register a new space or asset. The main catalogue stays dedicated to browsing, while this page handles creation.
+              Use this page to register a new space or asset. The main catalogue stays dedicated to browsing, while this page handles creation and image upload.
             </p>
             <div className="facility-create-hero__links">
               <Link to="/resources" className="btn-secondary">Back to facilities</Link>

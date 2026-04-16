@@ -27,6 +27,8 @@ const statusOptions = [
 
 const ResourceForm = ({ onCreated }) => {
   const [formData, setFormData] = useState(initialFormState);
+  const [imagePreview, setImagePreview] = useState('');
+  const [selectedImageName, setSelectedImageName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -39,11 +41,43 @@ const ResourceForm = ({ onCreated }) => {
     }));
   };
 
+  const handleImageUpload = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose a valid image file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const previewDataUrl = String(reader.result || '');
+      setImagePreview(previewDataUrl);
+      setSelectedImageName(file.name);
+      setFormData((previous) => ({
+        ...previous,
+        imageUrl: previewDataUrl,
+      }));
+      setError('');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitting(true);
     setMessage('');
     setError('');
+
+    if (!formData.imageUrl) {
+      setError('Please upload an image or paste an image URL before submitting.');
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const payload = {
@@ -54,6 +88,8 @@ const ResourceForm = ({ onCreated }) => {
 
       await api.post('/resources', payload);
       setFormData(initialFormState);
+      setImagePreview('');
+      setSelectedImageName('');
       setMessage('Facility added successfully.');
       if (onCreated) {
         onCreated();
@@ -152,15 +188,39 @@ const ResourceForm = ({ onCreated }) => {
           </label>
 
           <label className="facility-form__field facility-form__field--full">
-            <span>Image URL</span>
+            <span>Upload image from desktop</span>
+            <div className="facility-form__upload">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+              <p className="facility-form__helper">
+                Choose an image from your computer. The selected file is stored with the facility.
+              </p>
+              {selectedImageName && (
+                <p className="facility-form__file-name">Selected file: {selectedImageName}</p>
+              )}
+              {imagePreview && (
+                <div className="facility-form__preview">
+                  <img src={imagePreview} alt="Selected facility preview" />
+                </div>
+              )}
+            </div>
+          </label>
+
+          <label className="facility-form__field facility-form__field--full">
+            <span>Image URL fallback</span>
             <input
               type="url"
               name="imageUrl"
               value={formData.imageUrl}
               onChange={handleChange}
               placeholder="https://images.unsplash.com/..."
-              required
             />
+            <p className="facility-form__helper">
+              Leave this as-is if you upload a file. Paste a URL only if you prefer linking an external image.
+            </p>
           </label>
         </div>
 
