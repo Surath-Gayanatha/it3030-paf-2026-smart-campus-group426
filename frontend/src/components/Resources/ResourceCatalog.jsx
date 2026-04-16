@@ -60,13 +60,14 @@ const ResourceCatalog = () => {
           </div>
           <div className="filter-group">
             <label>Location</label>
-            <input 
-              type="text" 
-              name="location" 
-              placeholder="Filter by location" 
-              value={filters.location} 
-              onChange={handleFilterChange} 
-            />
+            <select name="location" value={filters.location} onChange={handleFilterChange}>
+              <option value="">All Locations</option>
+              <option value="Main Building">Main Building</option>
+              <option value="IT Faculty">IT Faculty</option>
+              <option value="Engineering Block">Engineering Block</option>
+              <option value="Science Lab">Science Lab</option>
+              <option value="Library Wing">Library Wing</option>
+            </select>
           </div>
           <div className="filter-group">
             <label>Min Capacity</label>

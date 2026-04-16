@@ -174,47 +174,69 @@
 
 .facility-hero__gallery {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 1.5rem;
-  height: 500px;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(12, 1fr);
+  gap: 1.25rem;
+  height: 520px;
   animation: scaleIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  perspective: 1000px;
 }
 
 .facility-hero__card {
   position: relative;
   border-radius: 1.5rem;
   overflow: hidden;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #f1f5f9;
+  border: 4px solid white;
 }
 
-.facility-hero__card:nth-child(1) { grid-row: span 2; }
-.facility-hero__card:nth-child(4) { grid-column: span 1; }
+/* Create a dynamic staggered mosaic layout */
+.facility-hero__card:nth-child(1) { 
+  grid-column: 1 / 8; 
+  grid-row: 1 / 8; 
+  z-index: 2;
+}
+.facility-hero__card:nth-child(2) { 
+  grid-column: 8 / 13; 
+  grid-row: 2 / 7; 
+}
+.facility-hero__card:nth-child(3) { 
+  grid-column: 2 / 7; 
+  grid-row: 8 / 13; 
+}
+.facility-hero__card:nth-child(4) { 
+  grid-column: 7 / 13; 
+  grid-row: 7 / 13; 
+}
 
 .facility-hero__card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: saturate(1.1);
 }
 
 .facility-hero__card div {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   padding: 1.5rem;
-  background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent);
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, transparent 60%);
   color: white;
-  transform: translateY(10px);
   opacity: 0;
   transition: all 0.4s ease;
 }
 
 .facility-hero__card:hover {
-  transform: scale(1.02) translateY(-5px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: translateY(-10px) rotateX(2deg) rotateY(-2deg);
+  z-index: 10;
+  box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.2);
+  border-color: #2563eb;
 }
 
 .facility-hero__card:hover img {
@@ -222,20 +244,29 @@
 }
 
 .facility-hero__card:hover div {
-  transform: translateY(0);
   opacity: 1;
 }
 
 .facility-hero__card h3 {
   color: white;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
   margin-bottom: 0.25rem;
+  transform: translateY(10px);
+  transition: transform 0.4s ease 0.1s;
 }
 
 .facility-hero__card p {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
   margin: 0;
+  transform: translateY(10px);
+  transition: transform 0.4s ease 0.2s;
+}
+
+.facility-hero__card:hover h3,
+.facility-hero__card:hover p {
+  transform: translateY(0);
 }
 
 @keyframes scaleIn {
