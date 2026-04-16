@@ -27,9 +27,9 @@ const featuredFacilities = [
 ];
 
 const stats = [
-  { value: '24', label: 'Spaces listed' },
-  { value: '6', label: 'Facility types' },
-  { value: '100%', label: 'Image-based browsing' },
+  { value: '24+', label: 'Spaces' },
+  { value: '6', label: 'Types' },
+  { value: '100%', label: 'Visual' },
 ];
 
 const Resources = () => {
