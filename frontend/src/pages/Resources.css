@@ -373,14 +373,153 @@
   }
 }
 
-@media (max-width: 768px) {
-  .filter-bar {
+/* Facility Detail Page Styles */
+.facility-detail-hero {
+  background: white;
+  border-radius: 2.5rem;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(15, 23, 42, 0.1);
+  margin-bottom: 6rem;
+  border: 1px solid #f1f5f9;
+}
+
+.facility-detail-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  min-height: 600px;
+}
+
+.facility-detail-image {
+  background: #f1f5f9;
+  overflow: hidden;
+  position: relative;
+}
+
+.detail-main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1s ease;
+}
+
+.facility-detail-image:hover .detail-main-img {
+  transform: scale(1.05);
+}
+
+.facility-detail-info {
+  padding: 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.detail-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 1rem 0 2.5rem;
+  line-height: 1.1;
+}
+
+.detail-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.detail-meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.meta-icon {
+  font-size: 1.5rem;
+  background: #f8fafc;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.detail-meta-item strong {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.detail-meta-item p {
+  margin: 0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.detail-description {
+  margin-bottom: 3rem;
+}
+
+.detail-description h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+}
+
+.detail-description p {
+  color: #64748b;
+  line-height: 1.8;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.detail-availability h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+  color: #0f172a;
+}
+
+.availability-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 3rem;
+}
+
+.availability-tag {
+  background: #f0f7ff;
+  color: #2563eb;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.detail-actions {
+  margin-top: auto;
+}
+
+@media (max-width: 1024px) {
+  .facility-detail-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
   }
-  .facility-hero__stats {
-    gap: 1.5rem;
-    flex-wrap: wrap;
+  .facility-detail-info {
+    padding: 2.5rem;
+  }
+  .detail-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .detail-meta {
+    grid-template-columns: 1fr;
   }
 }
 

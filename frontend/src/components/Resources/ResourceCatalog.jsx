@@ -51,7 +51,7 @@ const ResourceCatalog = () => {
           <div className="filter-group">
             <label>Type</label>
             <select name="type" value={filters.type} onChange={handleFilterChange}>
-              <option value="">All Types</option>
+              <option value="">Select Type</option>
               <option value="Lecture Hall">Lecture Hall</option>
               <option value="Lab">Lab</option>
               <option value="Meeting Room">Meeting Room</option>
@@ -61,7 +61,7 @@ const ResourceCatalog = () => {
           <div className="filter-group">
             <label>Location</label>
             <select name="location" value={filters.location} onChange={handleFilterChange}>
-              <option value="">All Locations</option>
+              <option value="">Select Location</option>
               <option value="Main Building">Main Building</option>
               <option value="IT Faculty">IT Faculty</option>
               <option value="Engineering Block">Engineering Block</option>

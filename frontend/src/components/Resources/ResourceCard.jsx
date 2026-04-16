@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ResourceCard = ({ resource }) => {
+  const navigate = useNavigate();
   const statusLabel = resource.status ? resource.status.replace('_', ' ') : 'UNKNOWN';
   const statusClass = resource.status ? resource.status.toLowerCase() : 'unknown';
   const availabilityWindows = resource.availabilityWindows || [];
@@ -44,7 +46,12 @@ const ResourceCard = ({ resource }) => {
           </div>
         )}
         <div className="resource-card__footer">
-          <button className="btn btn--primary btn--sm">View facility</button>
+          <button 
+            className="btn btn--primary btn--sm"
+            onClick={() => navigate(`/facilities/${resource.id}`)}
+          >
+            View facility
+          </button>
         </div>
       </div>
     </div>
