@@ -28,13 +28,35 @@
 
 .facility-hero__copy h1 {
   font-size: clamp(2.25rem, 4vw, 4rem);
-  line-height: 1.05;
-  margin: 0.5rem 0 1rem;
+  line-height: 1.1;
+  margin: 0.5rem 0 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: slideUpFade 0.8s ease-out forwards;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .facility-hero__copy p {
   max-width: 62ch;
   font-size: 1.025rem;
+  animation: fadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .facility-hero__actions {
