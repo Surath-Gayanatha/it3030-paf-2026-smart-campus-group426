@@ -16,6 +16,15 @@ const FacilityDetail = () => {
         setResource(response.data);
       } catch (error) {
         console.error('Error fetching resource details:', error);
+        // Fallback mock data if API fails or resource not found in DB
+        const mockFacilities = {
+          '1': { id: '1', name: 'Premium Innovation Hub', type: 'STUDY_ROOM', location: 'SLIIT Malabe - New Building', capacity: 15, description: 'A state-of-the-art innovation hub designed for collaborative projects and high-tech research.', imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200', availabilityWindows: ['08:00 - 10:00', '13:00 - 15:00'] },
+          '2': { id: '2', name: 'Grand Auditorium', type: 'COUNCIL_ROOM', location: 'SLIIT Malabe - Main Hall', capacity: 500, description: 'A massive space perfect for graduation ceremonies, guest lectures, and large-scale campus events.', imageUrl: 'https://images.unsplash.com/photo-1505373633560-fa9012857ff0?auto=format&fit=crop&q=80&w=1200', availabilityWindows: ['09:00 - 12:00'] },
+          '3': { id: '3', name: 'Quiet Study Lounge', type: 'LIBRARY_ZONE', location: 'SLIIT Metro Campus', capacity: 30, description: 'The perfect place for deep focus and silent study sessions with ergonomic seating and plenty of power outlets.', imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&q=80&w=1200', availabilityWindows: ['All Day'] }
+        };
+        if (mockFacilities[id]) {
+          setResource(mockFacilities[id]);
+        }
       } finally {
         setLoading(false);
       }
@@ -24,13 +33,26 @@ const FacilityDetail = () => {
   }, [id]);
 
   if (loading) return <div className="loading-spinner">Loading facility details...</div>;
-  if (!resource) return <div className="no-results"><h3>Facility not found</h3></div>;
+  
+  // Use fallbacks for image and description if they are missing
+  const displayImage = resource?.imageUrl || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200';
+  const displayDesc = resource?.description || 'This premium facility offers a modern and sleek environment, perfect for students and staff. It features high-speed connectivity, ergonomic interiors, and a quiet atmosphere conducive to both individual study and group collaboration.';
+
+  if (!resource) return (
+    <div className="resources-page">
+      <div className="container" style={{ paddingTop: '10rem', textAlign: 'center' }}>
+        <h2>Facility details are currently being updated.</h2>
+        <p>Please check back in a few moments or explore other facilities.</p>
+        <Link to="/resources" className="btn btn--primary" style={{ marginTop: '2rem' }}>Return to Catalog</Link>
+      </div>
+    </div>
+  );
 
   // Added dynamic images logic for unique look
   const galleryImages = [
-    resource.imageUrl,
-    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800',
-    'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=800'
+    displayImage,
+    'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=800',
+    'https://images.unsplash.com/photo-1517502884422-41eaadeff171?auto=format&fit=crop&q=80&w=800'
   ].filter(img => img);
 
   return (
@@ -52,7 +74,7 @@ const FacilityDetail = () => {
           <div className="facility-detail-grid" style={{ minHeight: 'auto', gap: '3rem' }}>
             <div className="facility-detail-image">
               <img 
-                src={resource.imageUrl || 'https://via.placeholder.com/800x500?text=No+Image'} 
+                src={displayImage} 
                 alt={resource.name} 
                 className="detail-main-img"
               />
@@ -98,7 +120,7 @@ const FacilityDetail = () => {
 
               <div className="description-card">
                 <h3>About this space</h3>
-                <p>{resource.description || 'This facility provides a modern and comfortable environment designed to enhance your productivity and learning experience. Equipped with high-speed Wi-Fi and ergonomic furniture.'}</p>
+                <p>{displayDesc}</p>
                 
                 <div className="amenities-list">
                   <div className="amenity-item"><span>🚀</span> High-speed Wi-Fi</div>
