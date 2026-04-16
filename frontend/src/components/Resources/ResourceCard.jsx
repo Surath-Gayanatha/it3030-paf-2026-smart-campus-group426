@@ -1,0 +1,40 @@
+import React from 'react';
+
+const ResourceCard = ({ resource }) => {
+  return (
+    <div className="resource-card">
+      <div className="resource-card__image-container">
+        <img 
+          src={resource.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'} 
+          alt={resource.name} 
+          className="resource-card__image"
+        />
+        <div className={`resource-card__status resource-card__status--${resource.status.toLowerCase()}`}>
+          {resource.status.replace('_', ' ')}
+        </div>
+      </div>
+      <div className="resource-card__content">
+        <div className="resource-card__header">
+          <span className="resource-card__type">{resource.type}</span>
+          <h3 className="resource-card__title">{resource.name}</h3>
+        </div>
+        <div className="resource-card__details">
+          <div className="resource-detail">
+            <span className="resource-detail__icon">📍</span>
+            <span className="resource-detail__text">{resource.location}</span>
+          </div>
+          <div className="resource-detail">
+            <span className="resource-detail__icon">👥</span>
+            <span className="resource-detail__text">Capacity: {resource.capacity}</span>
+          </div>
+        </div>
+        <p className="resource-card__description">{resource.description}</p>
+        <div className="resource-card__footer">
+          <button className="btn btn--primary btn--sm">Book Now</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ResourceCard;
