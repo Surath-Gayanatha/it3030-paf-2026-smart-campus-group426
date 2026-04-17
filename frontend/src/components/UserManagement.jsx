@@ -5,7 +5,7 @@ const roleClassName = {
   TECHNICIAN: 'user-role user-role--technician',
 };
 
-const UserManagement = ({ users, loading, editingUserId, selectedRole, onEditRole, onRoleChange, onCancel, onConfirm }) => {
+const UserManagement = ({ users, loading, editingUserId, selectedRole, selectedTechCategory, onEditRole, onRoleChange, onTechCategoryChange, onCancel, onConfirm }) => {
   if (loading) {
     return <div className="admin__state">Loading users...</div>;
   }
@@ -41,11 +41,11 @@ const UserManagement = ({ users, loading, editingUserId, selectedRole, onEditRol
               </td>
               <td>{user.email}</td>
               <td>
-                <span className={roleClassName[user.role] || 'user-role'}>{user.role}</span>
+                <span className={roleClassName[user.role] || 'user-role'}>{user.role === 'TECHNICIAN' && user.techCategory && user.techCategory !== 'NONE' ? `TECHNICIAN (${user.techCategory})` : user.role}</span>
               </td>
               <td>
                 {user.roleRequestStatus === 'PENDING' && user.requestedRole ? (
-                  <span className="user-role user-role--pending">{`PENDING: ${user.requestedRole}`}</span>
+                  <span className="user-role user-role--pending">{`PENDING: ${user.requestedRole === 'TECHNICIAN' && user.requestedTechCategory && user.requestedTechCategory !== 'NONE' ? `TECHNICIAN (${user.requestedTechCategory})` : user.requestedRole}`}</span>
                 ) : (
                   <span className="user-role">{user.roleRequestStatus || 'NONE'}</span>
                 )}
@@ -63,6 +63,22 @@ const UserManagement = ({ users, loading, editingUserId, selectedRole, onEditRol
                       <option value="LECTURER">LECTURER</option>
                       <option value="TECHNICIAN">TECHNICIAN</option>
                     </select>
+
+                    {selectedRole === 'TECHNICIAN' && (
+                      <select
+                        value={selectedTechCategory}
+                        onChange={(event) => onTechCategoryChange(event.target.value)}
+                        className="admin-select"
+                      >
+                        <option value="IT_EQUIPMENT">IT Equipment</option>
+                        <option value="ELECTRICAL">Electrical</option>
+                        <option value="PLUMBING">Plumbing</option>
+                        <option value="HVAC">HVAC</option>
+                        <option value="FURNITURE">Furniture</option>
+                        <option value="NONE">None</option>
+                      </select>
+                    )}
+
                     <button className="admin-btn admin-btn--primary" onClick={() => onConfirm(user)} type="button">
                       Save
                     </button>
