@@ -1,6 +1,7 @@
 package com.smartcampus.backend.dto.response;
 
 import com.smartcampus.backend.model.Role;
+import com.smartcampus.backend.model.RoleRequestStatus;
 import com.smartcampus.backend.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,9 @@ public class UserResponse {
     private String name;
     private String profilePicture;
     private Role role;
+    private Role requestedRole;
+    private RoleRequestStatus roleRequestStatus;
+    private boolean onboardingCompleted;
 
     // Convert User model to UserResponse DTO
     public static UserResponse fromUser(User user) {
@@ -27,6 +31,9 @@ public class UserResponse {
                 .name(user.getName())
                 .profilePicture(user.getProfilePicture())
                 .role(user.getRole())
+                .requestedRole(user.getRequestedRole())
+                .roleRequestStatus(user.getRoleRequestStatus())
+                .onboardingCompleted(user.isOnboardingCompleted())
                 .build();
     }
 }

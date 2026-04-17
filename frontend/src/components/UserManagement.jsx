@@ -1,6 +1,7 @@
 const roleClassName = {
   USER: 'user-role user-role--user',
   ADMIN: 'user-role user-role--admin',
+  LECTURER: 'user-role user-role--lecturer',
   TECHNICIAN: 'user-role user-role--technician',
 };
 
@@ -21,6 +22,7 @@ const UserManagement = ({ users, loading, editingUserId, selectedRole, onEditRol
             <th>User</th>
             <th>Email</th>
             <th>Current Role</th>
+            <th>Request</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -42,6 +44,13 @@ const UserManagement = ({ users, loading, editingUserId, selectedRole, onEditRol
                 <span className={roleClassName[user.role] || 'user-role'}>{user.role}</span>
               </td>
               <td>
+                {user.roleRequestStatus === 'PENDING' && user.requestedRole ? (
+                  <span className="user-role user-role--pending">{`PENDING: ${user.requestedRole}`}</span>
+                ) : (
+                  <span className="user-role">{user.roleRequestStatus || 'NONE'}</span>
+                )}
+              </td>
+              <td>
                 {editingUserId === user.id ? (
                   <div className="admin-actions">
                     <select
@@ -51,6 +60,7 @@ const UserManagement = ({ users, loading, editingUserId, selectedRole, onEditRol
                     >
                       <option value="USER">USER</option>
                       <option value="ADMIN">ADMIN</option>
+                      <option value="LECTURER">LECTURER</option>
                       <option value="TECHNICIAN">TECHNICIAN</option>
                     </select>
                     <button className="admin-btn admin-btn--primary" onClick={() => onConfirm(user)} type="button">
