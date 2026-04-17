@@ -1,45 +1,59 @@
-import { useEffect, useState } from "react";
-import API from "./api/api";
+import './App.css';
+import { Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import AdminRoute from './components/AdminRoute';
+import Hero from './components/Hero';
+import QuickActions from './components/QuickActions';
+import Features from './components/Features';
+import Stats from './components/Stats';
+import Footer from './components/Footer';
+import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
+import AdminPanel from './pages/AdminPanel';
+import OnboardingPage from './pages/OnboardingPage';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const HomePage = () => {
+  return (
+    <>
+      <main>
+        <Hero />
+        <QuickActions />
+        <Features />
+        <Stats />
+      </main>
+      <Footer />
+    </>
+  );
+};
 
 function App() {
-  const [resources, setResources] = useState([]);
-
-  const fetchResources = () => {
-    API.get("/resources")
-      .then((res) => setResources(res.data))
-      .catch((err) => console.log(err));
-  };
-
-  useEffect(() => {
-    fetchResources();
-  }, []);
-
-  const addResource = () => {
-    API.post("/resources", {
-      name: "Lab A",
-      type: "Room",
-      capacity: 50,
-      location: "Building A",
-      status: "ACTIVE",
-    }).then(() => fetchResources());
-  };
-
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>🏫 Smart Campus Resources</h1>
-
-      <button onClick={addResource}>Add Sample Resource</button>
-
-      {resources.length === 0 ? (
-        <p>No resources found</p>
-      ) : (
-        resources.map((item) => (
-          <div key={item.id}>
-            <p>{item.name}</p>
-          </div>
-        ))
-      )}
-    </div>
+    <AuthProvider>
+      <div>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+          <Route
+            path="/onboarding"
+            element={(
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/admin"
+            element={(
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            )}
+          />
+        </Routes>
+      </div>
+    </AuthProvider>
   );
 }
 
