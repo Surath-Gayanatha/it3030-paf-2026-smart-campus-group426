@@ -4,7 +4,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,8 +15,11 @@ import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -27,17 +29,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = getTokenFromRequest(request);
 
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            String email = jwtTokenProvider.getEmailFromToken(token);
-            String role = jwtTokenProvider.getRoleFromToken(token);
+        if (token != null) {
+            System.out.println("Received token: " + token.substring(0, Math.min(token.length(), 10)) + "...");
+            boolean isValid = jwtTokenProvider.validateToken(token);
+            System.out.println("Token validation result: " + isValid);
+            if (isValid) {
+                String email = jwtTokenProvider.getEmailFromToken(token);
+                String role = jwtTokenProvider.getRoleFromToken(token);
 
-            List<SimpleGrantedAuthority> authorities =
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                System.out.println("Extracted email=" + email + ", role=" + role);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(email, null, authorities);
+                List<SimpleGrantedAuthority> authorities =
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(email, null, authorities);
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } else {
+            System.out.println("No Bearer token found in request to " + request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);

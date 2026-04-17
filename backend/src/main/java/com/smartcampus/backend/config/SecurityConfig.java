@@ -1,6 +1,7 @@
 package com.smartcampus.backend.config;
 
 import com.smartcampus.backend.security.jwt.JwtAuthenticationFilter;
+import com.smartcampus.backend.security.jwt.JwtTokenProvider;
 import com.smartcampus.backend.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,9 +30,11 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
 
-    @Bean
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter();
+        return new JwtAuthenticationFilter(jwtTokenProvider);
     }
 
     @Bean
@@ -44,6 +47,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
+                                "/error",
                                 "/api/auth/**",
                                 "/oauth2/**",
                                 "/login/**"
@@ -52,6 +56,9 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2AuthenticationSuccessHandler)
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new org.springframework.security.web.authentication.HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED))
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter(),
@@ -65,7 +72,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { getBookings } from '../../api/booking.api';
+import { getBookings, updateBookingStatus } from '../../api/booking.api';
 import './Bookings.css';
 
-const BookingList = ({ onEdit, onReview, isAdmin }) => {
+const BookingList = ({ onEdit, onReview, isAdmin, statusFilter }) => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -22,17 +22,31 @@ const BookingList = ({ onEdit, onReview, isAdmin }) => {
         }
     };
 
+    const handleCancel = async (booking) => {
+        if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+        try {
+            await updateBookingStatus(booking.id, { status: "CANCELLED" });
+            fetchBookings();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error cancelling booking');
+        }
+    };
+
     if (loading) return <div>Loading bookings...</div>;
     if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
     const formatDate = (dateStr) => new Date(dateStr).toLocaleString();
 
+    const filteredBookings = bookings.filter(b => 
+        statusFilter === 'ALL' || b.status === statusFilter
+    );
+
     return (
         <div className="booking-grid">
-            {bookings.length === 0 ? (
+            {filteredBookings.length === 0 ? (
                 <p>No bookings found.</p>
             ) : (
-                bookings.map(booking => (
+                filteredBookings.map(booking => (
                     <div className="booking-card" key={booking.id}>
                         <span className={`status-badge status-${booking.status}`}>
                             {booking.status}
@@ -53,6 +67,9 @@ const BookingList = ({ onEdit, onReview, isAdmin }) => {
                         <div className="booking-actions">
                             {booking.status === 'PENDING' && !isAdmin && (
                                 <button className="btn-primary" onClick={() => onEdit(booking)}>Edit</button>
+                            )}
+                            {(booking.status === 'PENDING' || booking.status === 'APPROVED') && !isAdmin && (
+                                <button className="btn-ghost" style={{color: 'red', borderColor: 'red'}} onClick={() => handleCancel(booking)}>Cancel</button>
                             )}
                             {booking.status === 'PENDING' && isAdmin && (
                                 <button className="btn-primary" onClick={() => onReview(booking)}>Review</button>
