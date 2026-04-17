@@ -7,6 +7,7 @@ const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
   const [selectedRole, setSelectedRole] = useState('LECTURER');
+  const [selectedTechCategory, setSelectedTechCategory] = useState('IT_EQUIPMENT');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,7 +31,7 @@ const OnboardingPage = () => {
 
     try {
       await api.post('/auth/me/role-request', null, {
-        params: { role: selectedRole },
+        params: { role: selectedRole, techCategory: selectedTechCategory },
       });
       await refreshUser();
       navigate('/', { replace: true });
@@ -76,6 +77,7 @@ const OnboardingPage = () => {
 
           <button
             type="button"
+            type="button"
             className={`onboarding-role${selectedRole === 'TECHNICIAN' ? ' onboarding-role--active' : ''}`}
             onClick={() => setSelectedRole('TECHNICIAN')}
           >
@@ -83,6 +85,24 @@ const OnboardingPage = () => {
             <span>Request maintenance and ticket resolution permissions.</span>
           </button>
         </div>
+
+        {selectedRole === 'TECHNICIAN' && (
+          <div className="onboarding-tech-category">
+            <label htmlFor="techCategory">Select Technician Category:</label>
+            <select
+              id="techCategory"
+              value={selectedTechCategory}
+              onChange={(e) => setSelectedTechCategory(e.target.value)}
+              className="admin-select"
+            >
+              <option value="IT_EQUIPMENT">IT Equipment</option>
+              <option value="ELECTRICAL">Electrical</option>
+              <option value="PLUMBING">Plumbing</option>
+              <option value="HVAC">HVAC</option>
+              <option value="FURNITURE">Furniture</option>
+            </select>
+          </div>
+        )}
 
         {error && <p className="onboarding-error">{error}</p>}
 

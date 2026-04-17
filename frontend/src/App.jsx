@@ -12,6 +12,10 @@ import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminLogin from './pages/AdminLogin';
+import Resources from './pages/Resources';
+import AddFacility from './pages/AddFacility';
+import FacilityDetail from './pages/FacilityDetail';
 
 const HomePage = () => {
   return (
@@ -34,6 +38,10 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/facilities/:id" element={<FacilityDetail />} />
+          <Route path="/facilities/create" element={<AddFacility />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
           <Route
             path="/onboarding"

@@ -38,6 +38,12 @@ public class User {
     private RoleRequestStatus roleRequestStatus = RoleRequestStatus.NONE;
 
     @Builder.Default
+    private TechCategory techCategory = TechCategory.NONE;
+
+    @Builder.Default
+    private TechCategory requestedTechCategory = TechCategory.NONE;
+
+    @Builder.Default
     private boolean onboardingCompleted = false;
 
     @Builder.Default
