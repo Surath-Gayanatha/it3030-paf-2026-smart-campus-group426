@@ -1,34 +1,55 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  Users, Clock, CheckCircle, XCircle, AlertCircle, Search,
+  Users, Clock, CheckCircle, AlertCircle, Search,
   Filter, ChevronDown, UserCheck, RefreshCw, Eye, Wrench,
-  TrendingUp, Activity, ArrowUpRight, X, ChevronRight
+  TrendingUp, Activity, X, ShieldCheck, Zap
 } from 'lucide-react';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-const STATUS_META = {
-  OPEN:        { label: 'Open',        color: '#3B82F6', bg: '#EFF6FF', border: '#BFDBFE' },
-  IN_PROGRESS: { label: 'In Progress', color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A' },
-  RESOLVED:    { label: 'Resolved',    color: '#10B981', bg: '#ECFDF5', border: '#A7F3D0' },
-  REJECTED:    { label: 'Rejected',    color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
-  CLOSED:      { label: 'Closed',      color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
+const TOKEN = {
+  bg:        '#0B0F1A',
+  surface:   '#111827',
+  surfaceEl: '#1C2537',
+  border:    'rgba(255,255,255,0.07)',
+  borderHov: 'rgba(255,255,255,0.14)',
+  textPri:   '#F0F4FF',
+  textSec:   '#8896B3',
+  textMut:   '#4E5E7A',
 };
 
-const PRIORITY_META = {
-  LOW:      { color: '#10B981', bg: '#ECFDF5' },
-  MEDIUM:   { color: '#F59E0B', bg: '#FFFBEB' },
-  HIGH:     { color: '#EF4444', bg: '#FEF2F2' },
-  CRITICAL: { color: '#7C3AED', bg: '#F5F3FF' },
+/* ─── Status Config ──────────────────────────────────────────────────────── */
+const STATUS = {
+  OPEN:        { label:'Open',        color:'#3B82F6', bg:'rgba(59,130,246,0.12)',  glow:'rgba(59,130,246,0.35)',  border:'rgba(59,130,246,0.4)'  },
+  IN_PROGRESS: { label:'In Progress', color:'#F59E0B', bg:'rgba(245,158,11,0.12)', glow:'rgba(245,158,11,0.35)', border:'rgba(245,158,11,0.4)' },
+  RESOLVED:    { label:'Resolved',    color:'#10B981', bg:'rgba(16,185,129,0.12)', glow:'rgba(16,185,129,0.35)', border:'rgba(16,185,129,0.4)' },
+  REJECTED:    { label:'Rejected',    color:'#EF4444', bg:'rgba(239,68,68,0.12)',  glow:'rgba(239,68,68,0.35)',  border:'rgba(239,68,68,0.4)'  },
+  CLOSED:      { label:'Closed',      color:'#6B7280', bg:'rgba(107,114,128,0.12)',glow:'rgba(107,114,128,0.3)', border:'rgba(107,114,128,0.35)'},
 };
 
+/* ─── Priority Config ────────────────────────────────────────────────────── */
+const PRIORITY = {
+  LOW:      { color:'#22D3EE', bg:'rgba(34,211,238,0.1)',   stripe:'rgba(34,211,238,0.08)'  },
+  MEDIUM:   { color:'#FBBF24', bg:'rgba(251,191,36,0.1)',   stripe:'rgba(251,191,36,0.06)'  },
+  HIGH:     { color:'#FB923C', bg:'rgba(251,146,60,0.1)',   stripe:'rgba(251,146,60,0.07)'  },
+  CRITICAL: { color:'#F472B6', bg:'rgba(244,114,182,0.1)',  stripe:'rgba(244,114,182,0.08)' },
+};
+
+/* ─── Stat Cards Config ──────────────────────────────────────────────────── */
+const STAT_CARDS = [
+  { key:'ALL',         label:'Total',       icon:Activity,    from:'#6366F1', to:'#818CF8', shadow:'rgba(99,102,241,0.4)'  },
+  { key:'OPEN',        label:'Open',        icon:Zap,         from:'#2563EB', to:'#3B82F6', shadow:'rgba(59,130,246,0.4)'  },
+  { key:'IN_PROGRESS', label:'In Progress', icon:Clock,       from:'#D97706', to:'#F59E0B', shadow:'rgba(245,158,11,0.4)'  },
+  { key:'RESOLVED',    label:'Resolved',    icon:CheckCircle, from:'#059669', to:'#10B981', shadow:'rgba(16,185,129,0.4)'  },
+  { key:'unassigned',  label:'Unassigned',  icon:Users,       from:'#DC2626', to:'#EF4444', shadow:'rgba(239,68,68,0.4)'   },
+];
+
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
 const timeSince = (iso) => {
   if (!iso) return '—';
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
+  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
@@ -36,175 +57,292 @@ const timeSince = (iso) => {
 };
 
 const TECHNICIANS = [
-  'Alice Fernando', 'Bob Perera', 'Chamara Silva',
-  'Dilshan Jayawardena', 'Eranga Bandara', 'Fathima Rizvi',
+  'Alice Fernando','Bob Perera','Chamara Silva',
+  'Dilshan Jayawardena','Eranga Bandara','Fathima Rizvi',
 ];
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+const initials = (name) => name?.split(' ').map(n => n[0]).join('').slice(0,2) || '?';
 
-const StatCard = ({ icon: Icon, label, value, color, trend }) => (
-  <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-      <div>
-        <p style={{ margin: '0 0 8px 0', fontSize: '0.8rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          {label}
-        </p>
-        <p style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
-          {value}
-        </p>
-        {trend && (
-          <p style={{ margin: '8px 0 0 0', fontSize: '0.8rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ArrowUpRight size={14} /> {trend}
-          </p>
-        )}
-      </div>
-      <div style={{ padding: '12px', borderRadius: '12px', background: color + '20' }}>
-        <Icon size={22} color={color} />
-      </div>
-    </div>
-    <div style={{
-      position: 'absolute', bottom: 0, right: 0,
-      width: '80px', height: '80px', borderRadius: '50%',
-      background: color + '08', transform: 'translate(20px, 20px)'
-    }} />
-  </div>
-);
+/* ─── Global Styles ──────────────────────────────────────────────────────── */
+const globalStyle = `
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
+  .adm-root { font-family: 'Outfit', sans-serif; }
+  .adm-root * { box-sizing: border-box; }
+
+  .adm-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: #F0F4FF;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .adm-input::placeholder { color: #4E5E7A; }
+  .adm-input:focus {
+    border-color: rgba(99,102,241,0.6);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  }
+
+  .adm-btn-ghost {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #8896B3;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 9px 16px;
+    transition: all 0.18s;
+  }
+  .adm-btn-ghost:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.18);
+    color: #F0F4FF;
+  }
+
+  .adm-btn-primary {
+    background: linear-gradient(135deg,#6366F1,#818CF8);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 11px 22px;
+    transition: opacity 0.18s, transform 0.15s;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+  }
+  .adm-btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+  .adm-btn-primary:active { transform: translateY(0); }
+  .adm-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .adm-row-hover { transition: background 0.15s; }
+  .adm-row-hover:hover { background: rgba(255,255,255,0.03) !important; }
+
+  .adm-action-btn {
+    align-items: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #8896B3;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    padding: 7px;
+    transition: all 0.18s;
+  }
+
+  @keyframes adm-fade-in {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes adm-spin {
+    to { transform: rotate(360deg); }
+  }
+  .adm-spin { animation: adm-spin 1s linear infinite; }
+  .adm-fade-in { animation: adm-fade-in 0.35s ease forwards; }
+
+  .adm-scrollbar::-webkit-scrollbar { width: 5px; }
+  .adm-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .adm-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+`;
+
+/* ─── StatusBadge ────────────────────────────────────────────────────────── */
 const StatusBadge = ({ status }) => {
-  const meta = STATUS_META[status] || STATUS_META.CLOSED;
+  const s = STATUS[status] || STATUS.CLOSED;
   return (
     <span style={{
-      padding: '4px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700,
-      color: meta.color, background: meta.bg, border: `1px solid ${meta.border}`,
-      whiteSpace: 'nowrap'
+      alignItems:'center', background:s.bg, border:`1px solid ${s.border}`,
+      borderRadius:'20px', color:s.color, display:'inline-flex', fontSize:'0.75rem',
+      fontWeight:700, gap:'5px', letterSpacing:'0.03em', padding:'4px 11px', whiteSpace:'nowrap',
     }}>
-      {meta.label}
+      <span style={{ background:s.color, borderRadius:'50%', display:'inline-block', height:'6px', width:'6px', flexShrink:0, boxShadow:`0 0 6px ${s.glow}` }} />
+      {s.label}
     </span>
   );
 };
 
+/* ─── PriorityBadge ──────────────────────────────────────────────────────── */
 const PriorityBadge = ({ priority }) => {
-  const meta = PRIORITY_META[priority] || PRIORITY_META.MEDIUM;
+  const p = PRIORITY[priority] || PRIORITY.MEDIUM;
   return (
     <span style={{
-      padding: '3px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
-      color: meta.color, background: meta.bg, whiteSpace: 'nowrap'
+      background:p.bg, borderRadius:'6px', color:p.color,
+      fontSize:'0.72rem', fontWeight:800, letterSpacing:'0.08em',
+      padding:'3px 9px', textTransform:'uppercase', whiteSpace:'nowrap',
     }}>
       {priority}
     </span>
   );
 };
 
-// ─── Assign Technician Modal ────────────────────────────────────────────────
+/* ─── Stat Card ──────────────────────────────────────────────────────────── */
+const StatCard = ({ icon: Icon, label, value, from, to, shadow }) => (
+  <div style={{
+    background:`linear-gradient(135deg,${from}18,${to}08)`,
+    border:`1px solid ${from}30`,
+    borderRadius:'16px',
+    padding:'22px 24px',
+    position:'relative',
+    overflow:'hidden',
+    animation:'adm-fade-in 0.4s ease forwards',
+  }}>
+    <div style={{
+      position:'absolute', top:0, right:0, width:'90px', height:'90px',
+      background:`radial-gradient(circle at 70% 30%, ${to}22, transparent 70%)`,
+      pointerEvents:'none',
+    }} />
+    <div style={{
+      alignItems:'center', background:`linear-gradient(135deg,${from},${to})`,
+      borderRadius:'10px', boxShadow:`0 6px 18px ${shadow}`,
+      display:'inline-flex', justifyContent:'center', marginBottom:'14px',
+      padding:'9px',
+    }}>
+      <Icon size={18} color="#fff" />
+    </div>
+    <p style={{ color:TOKEN.textSec, fontSize:'0.78rem', fontWeight:600, letterSpacing:'0.06em', margin:'0 0 4px', textTransform:'uppercase' }}>
+      {label}
+    </p>
+    <p style={{ color:TOKEN.textPri, fontSize:'2.1rem', fontWeight:800, lineHeight:1, margin:0, fontVariantNumeric:'tabular-nums' }}>
+      {value}
+    </p>
+  </div>
+);
 
+/* ─── Overlay ────────────────────────────────────────────────────────────── */
+const Overlay = ({ children, onClose }) => (
+  <div style={{
+    alignItems:'center', background:'rgba(0,0,0,0.75)', backdropFilter:'blur(8px)',
+    bottom:0, display:'flex', justifyContent:'center', left:0, padding:'20px',
+    position:'fixed', right:0, top:0, zIndex:1000,
+  }}>
+    <div className="adm-fade-in adm-scrollbar" style={{
+      background:TOKEN.surface, border:`1px solid ${TOKEN.border}`, borderRadius:'20px',
+      boxShadow:'0 32px 80px rgba(0,0,0,0.6)', maxHeight:'90vh', maxWidth:'540px',
+      overflowY:'auto', padding:'32px', position:'relative', width:'100%',
+    }}>
+      <button onClick={onClose} style={{
+        background:'rgba(255,255,255,0.06)', border:`1px solid ${TOKEN.border}`,
+        borderRadius:'8px', color:TOKEN.textSec, cursor:'pointer', padding:'6px',
+        position:'absolute', right:'16px', top:'16px', display:'flex',
+        transition:'all 0.15s',
+      }}>
+        <X size={16} />
+      </button>
+      {children}
+    </div>
+  </div>
+);
+
+/* ─── Assign Modal ───────────────────────────────────────────────────────── */
 const AssignModal = ({ ticket, onClose, onAssigned }) => {
   const [selected, setSelected] = useState(ticket.assignedTechnician || '');
   const [custom, setCustom]     = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
 
-  const technician = custom.trim() || selected;
+  const tech = custom.trim() || selected;
 
   const handleAssign = async () => {
-    if (!technician) { setError('Please select or enter a technician.'); return; }
+    if (!tech) { setError('Please select or enter a technician.'); return; }
     setLoading(true);
     try {
       await API.patch(`/tickets/${ticket.id}/status`, {
         status: ticket.status === 'OPEN' ? 'IN_PROGRESS' : ticket.status,
-        assignedTechnician: technician,
+        assignedTechnician: tech,
       });
-      onAssigned();
-      onClose();
+      onAssigned(); onClose();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to assign technician.');
-    } finally {
-      setLoading(false);
-    }
+      setError(err.response?.data?.message || 'Failed to assign.');
+    } finally { setLoading(false); }
   };
+
+  const avatarColors = ['#6366F1','#10B981','#F59E0B','#EF4444','#3B82F6','#EC4899'];
 
   return (
     <Overlay onClose={onClose}>
-      <h3 style={{ margin: '0 0 6px 0', fontSize: '1.25rem', fontWeight: 800 }}>Assign Technician</h3>
-      <p style={{ margin: '0 0 24px 0', color: '#64748B', fontSize: '0.9rem' }}>
-        Ticket <strong>#{ticket.id.slice(-5)}</strong> · {ticket.category?.replace('_', ' ')}
+      <h3 style={{ color:TOKEN.textPri, fontSize:'1.2rem', fontWeight:800, margin:'0 0 4px' }}>Assign Technician</h3>
+      <p style={{ color:TOKEN.textSec, fontSize:'0.87rem', margin:'0 0 24px' }}>
+        Ticket <span style={{ color:'#818CF8', fontWeight:700 }}>#{ticket.id.slice(-5)}</span> · {ticket.category?.replace('_',' ')}
       </p>
 
-      <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <p style={{ color:TOKEN.textMut, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.1em', margin:'0 0 10px', textTransform:'uppercase' }}>
         Available Technicians
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-        {TECHNICIANS.map(t => (
-          <button
-            key={t}
-            onClick={() => { setSelected(t); setCustom(''); }}
-            style={{
-              padding: '12px 16px', borderRadius: '10px', border: '2px solid',
-              borderColor: selected === t && !custom ? 'var(--primary-accent)' : '#E2E8F0',
-              background: selected === t && !custom ? '#EEF2FF' : '#F8FAFC',
-              textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
-              fontWeight: selected === t && !custom ? 700 : 500,
-              color: selected === t && !custom ? 'var(--primary-accent)' : 'var(--text-primary)',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              background: selected === t && !custom ? 'var(--primary-accent)' : '#CBD5E1',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: '0.85rem', fontWeight: 700, flexShrink: 0
+      <div style={{ display:'flex', flexDirection:'column', gap:'6px', marginBottom:'20px' }}>
+        {TECHNICIANS.map((t, i) => {
+          const active = selected === t && !custom;
+          return (
+            <button key={t} onClick={() => { setSelected(t); setCustom(''); }} style={{
+              alignItems:'center', background: active ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)',
+              border:`1px solid ${active ? 'rgba(99,102,241,0.5)' : TOKEN.border}`,
+              borderRadius:'10px', color: active ? '#A5B4FC' : TOKEN.textSec, cursor:'pointer',
+              display:'flex', gap:'10px', fontFamily:'Outfit,sans-serif', fontSize:'0.88rem',
+              fontWeight: active ? 700 : 500, padding:'11px 14px', textAlign:'left', transition:'all 0.15s',
             }}>
-              {t.split(' ').map(n => n[0]).join('')}
-            </div>
-            {t}
-          </button>
-        ))}
+              <div style={{
+                alignItems:'center', background: active ? '#6366F1' : avatarColors[i % avatarColors.length] + '40',
+                borderRadius:'50%', color: active ? '#fff' : avatarColors[i % avatarColors.length],
+                display:'flex', flexShrink:0, fontSize:'0.72rem', fontWeight:800,
+                height:'32px', justifyContent:'center', width:'32px',
+              }}>
+                {initials(t)}
+              </div>
+              {t}
+              {active && <span style={{ marginLeft:'auto', background:'rgba(99,102,241,0.2)', border:'1px solid rgba(99,102,241,0.4)', borderRadius:'6px', color:'#818CF8', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px' }}>Selected</span>}
+            </button>
+          );
+        })}
       </div>
 
-      <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        Or Enter Custom Name
+      <p style={{ color:TOKEN.textMut, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.1em', margin:'0 0 8px', textTransform:'uppercase' }}>
+        Or enter custom name
       </p>
-      <input
-        className="premium-input"
-        placeholder="Type technician name…"
-        value={custom}
+      <input className="adm-input" placeholder="Type technician name…" value={custom}
         onChange={e => { setCustom(e.target.value); setSelected(''); }}
-        style={{ marginBottom: '16px' }}
-      />
+        style={{ marginBottom:'16px' }} />
 
-      {error && <p style={{ color: '#EF4444', fontSize: '0.85rem', margin: '0 0 12px 0' }}>⚠️ {error}</p>}
-
+      {error && <p style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'8px', color:'#FCA5A5', fontSize:'0.83rem', margin:'0 0 12px', padding:'10px 14px' }}>⚠ {error}</p>}
       {ticket.status === 'OPEN' && (
-        <p style={{ fontSize: '0.82rem', color: '#F59E0B', background: '#FFFBEB', padding: '10px 14px', borderRadius: '8px', margin: '0 0 16px 0' }}>
-          ℹ️ Assigning will automatically move ticket to <strong>In Progress</strong>.
+        <p style={{ background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:'8px', color:'#FCD34D', fontSize:'0.82rem', margin:'0 0 20px', padding:'10px 14px' }}>
+          ℹ Assigning will automatically move ticket to <strong>In Progress</strong>.
         </p>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-        <button className="secondary-btn" onClick={onClose} disabled={loading}>Cancel</button>
-        <button className="premium-btn" onClick={handleAssign} disabled={loading}>
-          {loading ? 'Assigning…' : <><UserCheck size={16} style={{ marginRight: '6px' }} />Assign</>}
+      <div style={{ display:'flex', gap:'10px', justifyContent:'flex-end' }}>
+        <button className="adm-btn-ghost" onClick={onClose} disabled={loading}>Cancel</button>
+        <button className="adm-btn-primary" onClick={handleAssign} disabled={loading}>
+          {loading ? 'Assigning…' : <><UserCheck size={15} />Assign</>}
         </button>
       </div>
     </Overlay>
   );
 };
 
-// ─── Status Update Modal ─────────────────────────────────────────────────────
-
+/* ─── Status Modal ───────────────────────────────────────────────────────── */
 const StatusModal = ({ ticket, onClose, onUpdated }) => {
-  const nextStatuses = {
-    OPEN:        ['IN_PROGRESS', 'REJECTED'],
-    IN_PROGRESS: ['RESOLVED', 'REJECTED'],
-    RESOLVED:    ['CLOSED'],
-    REJECTED:    ['CLOSED'],
+  const nextMap = {
+    OPEN:['IN_PROGRESS','REJECTED'], IN_PROGRESS:['RESOLVED','REJECTED'],
+    RESOLVED:['CLOSED'], REJECTED:['CLOSED'],
   };
-  const options = nextStatuses[ticket.status] || [];
-
+  const options = nextMap[ticket.status] || [];
   const [newStatus, setNewStatus] = useState(options[0] || '');
   const [notes, setNotes]         = useState('');
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState('');
-
   const needsNotes = newStatus === 'RESOLVED' || newStatus === 'REJECTED';
 
   const handleUpdate = async () => {
@@ -216,77 +354,66 @@ const StatusModal = ({ ticket, onClose, onUpdated }) => {
         resolutionNotes: newStatus === 'RESOLVED' ? notes : null,
         rejectionReason: newStatus === 'REJECTED' ? notes : null,
       });
-      onUpdated();
-      onClose();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Update failed.');
-    } finally {
-      setLoading(false);
-    }
+      onUpdated(); onClose();
+    } catch (err) { setError(err.response?.data?.message || 'Update failed.'); }
+    finally { setLoading(false); }
   };
 
-  if (!options.length) {
-    return (
-      <Overlay onClose={onClose}>
-        <h3 style={{ margin: '0 0 12px 0' }}>No Status Transitions</h3>
-        <p style={{ color: '#64748B' }}>This ticket is <strong>{ticket.status}</strong> and cannot be moved further.</p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
-          <button className="secondary-btn" onClick={onClose}>Close</button>
-        </div>
-      </Overlay>
-    );
-  }
+  if (!options.length) return (
+    <Overlay onClose={onClose}>
+      <h3 style={{ color:TOKEN.textPri, margin:'0 0 12px' }}>No Transitions Available</h3>
+      <p style={{ color:TOKEN.textSec }}>Ticket is <strong style={{ color:'#818CF8' }}>{ticket.status}</strong> and cannot move further.</p>
+      <div style={{ display:'flex', justifyContent:'flex-end', marginTop:'24px' }}>
+        <button className="adm-btn-ghost" onClick={onClose}>Close</button>
+      </div>
+    </Overlay>
+  );
 
   return (
     <Overlay onClose={onClose}>
-      <h3 style={{ margin: '0 0 6px 0', fontSize: '1.25rem', fontWeight: 800 }}>Update Status</h3>
-      <p style={{ margin: '0 0 24px 0', color: '#64748B', fontSize: '0.9rem' }}>
-        Ticket <strong>#{ticket.id.slice(-5)}</strong> · currently <StatusBadge status={ticket.status} />
+      <h3 style={{ color:TOKEN.textPri, fontSize:'1.2rem', fontWeight:800, margin:'0 0 4px' }}>Update Status</h3>
+      <p style={{ color:TOKEN.textSec, fontSize:'0.87rem', margin:'0 0 24px', display:'flex', alignItems:'center', gap:'8px' }}>
+        Ticket <span style={{ color:'#818CF8', fontWeight:700 }}>#{ticket.id.slice(-5)}</span>
+        · currently <StatusBadge status={ticket.status} />
       </p>
 
-      <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+      <p style={{ color:TOKEN.textMut, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.1em', margin:'0 0 10px', textTransform:'uppercase' }}>
         Move to
       </p>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {options.map(s => (
-          <button
-            key={s}
-            onClick={() => setNewStatus(s)}
-            style={{
-              padding: '10px 18px', borderRadius: '10px', border: '2px solid',
-              borderColor: newStatus === s ? STATUS_META[s]?.color : '#E2E8F0',
-              background: newStatus === s ? STATUS_META[s]?.bg : '#F8FAFC',
-              color: newStatus === s ? STATUS_META[s]?.color : '#64748B',
-              fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {STATUS_META[s]?.label}
-          </button>
-        ))}
+      <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', marginBottom:'20px' }}>
+        {options.map(s => {
+          const meta = STATUS[s];
+          const active = newStatus === s;
+          return (
+            <button key={s} onClick={() => setNewStatus(s)} style={{
+              background: active ? meta.bg : 'rgba(255,255,255,0.03)',
+              border:`2px solid ${active ? meta.border : TOKEN.border}`,
+              borderRadius:'10px', color: active ? meta.color : TOKEN.textSec,
+              cursor:'pointer', fontFamily:'Outfit,sans-serif', fontSize:'0.88rem',
+              fontWeight:700, padding:'10px 20px', transition:'all 0.15s',
+            }}>
+              {meta.label}
+            </button>
+          );
+        })}
       </div>
 
       {needsNotes && (
         <>
-          <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+          <p style={{ color:TOKEN.textMut, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.1em', margin:'0 0 8px', textTransform:'uppercase' }}>
             {newStatus === 'RESOLVED' ? 'Resolution Notes' : 'Rejection Reason'}
           </p>
-          <textarea
-            className="premium-input"
-            rows="4"
+          <textarea className="adm-input" rows={4} style={{ resize:'vertical', marginBottom:'12px' }}
             placeholder={newStatus === 'RESOLVED' ? 'Describe how the issue was resolved…' : 'Explain why this is being rejected…'}
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', marginBottom: '12px' }}
-          />
+            value={notes} onChange={e => setNotes(e.target.value)} />
         </>
       )}
 
-      {error && <p style={{ color: '#EF4444', fontSize: '0.85rem', margin: '0 0 12px 0' }}>⚠️ {error}</p>}
+      {error && <p style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'8px', color:'#FCA5A5', fontSize:'0.83rem', margin:'0 0 12px', padding:'10px 14px' }}>⚠ {error}</p>}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-        <button className="secondary-btn" onClick={onClose} disabled={loading}>Cancel</button>
-        <button className="premium-btn" onClick={handleUpdate} disabled={loading}>
+      <div style={{ display:'flex', gap:'10px', justifyContent:'flex-end', marginTop:'8px' }}>
+        <button className="adm-btn-ghost" onClick={onClose} disabled={loading}>Cancel</button>
+        <button className="adm-btn-primary" onClick={handleUpdate} disabled={loading}>
           {loading ? 'Updating…' : 'Confirm Update'}
         </button>
       </div>
@@ -294,31 +421,7 @@ const StatusModal = ({ ticket, onClose, onUpdated }) => {
   );
 };
 
-// ─── Overlay wrapper ─────────────────────────────────────────────────────────
-
-const Overlay = ({ children, onClose }) => (
-  <div style={{
-    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)',
-    backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
-    justifyContent: 'center', zIndex: 1000, padding: '20px'
-  }}>
-    <div className="glass-panel animate-fade-in" style={{
-      width: '100%', maxWidth: '520px', padding: '32px',
-      background: '#FFFFFF', maxHeight: '90vh', overflowY: 'auto', position: 'relative'
-    }}>
-      <button
-        onClick={onClose}
-        style={{ position: 'absolute', top: '16px', right: '16px', border: 'none', background: 'none', cursor: 'pointer', color: '#94A3B8' }}
-      >
-        <X size={20} />
-      </button>
-      {children}
-    </div>
-  </div>
-);
-
-// ─── Main AdminPanel ─────────────────────────────────────────────────────────
-
+/* ─── Main AdminView ─────────────────────────────────────────────────────── */
 const AdminView = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -330,8 +433,8 @@ const AdminView = () => {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [priorityFilter, setPriority]   = useState('ALL');
   const [sortBy, setSortBy]             = useState('createdAt');
-  const [assignTarget, setAssignTarget] = useState(null);   // ticket to assign
-  const [statusTarget, setStatusTarget] = useState(null);   // ticket to update status
+  const [assignTarget, setAssignTarget] = useState(null);
+  const [statusTarget, setStatusTarget] = useState(null);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
@@ -343,344 +446,330 @@ const AdminView = () => {
       setTickets(res.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load tickets.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [statusFilter, priorityFilter]);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (user) fetchTickets();
-      else setError('You must be logged in.');
-    }
+    if (!authLoading) { user ? fetchTickets() : setError('You must be logged in.'); }
   }, [authLoading, user, fetchTickets]);
 
-  // ── Derived data ───────────────────────────────────────────────────────────
-
   const counts = {
-    ALL: tickets.length,
-    OPEN: tickets.filter(t => t.status === 'OPEN').length,
+    ALL:         tickets.length,
+    OPEN:        tickets.filter(t => t.status === 'OPEN').length,
     IN_PROGRESS: tickets.filter(t => t.status === 'IN_PROGRESS').length,
-    RESOLVED: tickets.filter(t => t.status === 'RESOLVED').length,
-    REJECTED: tickets.filter(t => t.status === 'REJECTED').length,
-    CLOSED: tickets.filter(t => t.status === 'CLOSED').length,
+    RESOLVED:    tickets.filter(t => t.status === 'RESOLVED').length,
+    REJECTED:    tickets.filter(t => t.status === 'REJECTED').length,
+    CLOSED:      tickets.filter(t => t.status === 'CLOSED').length,
+    unassigned:  tickets.filter(t => !t.assignedTechnician && t.status !== 'CLOSED' && t.status !== 'RESOLVED').length,
   };
-
-  const unassigned = tickets.filter(t => !t.assignedTechnician && t.status !== 'CLOSED' && t.status !== 'RESOLVED').length;
 
   const filtered = tickets
     .filter(t => {
       const q = search.toLowerCase();
-      return (
-        t.description?.toLowerCase().includes(q) ||
-        t.contactName?.toLowerCase().includes(q) ||
-        t.id?.toLowerCase().includes(q) ||
-        t.resourceLocation?.toLowerCase().includes(q) ||
-        t.category?.toLowerCase().includes(q)
-      );
+      return t.description?.toLowerCase().includes(q) || t.contactName?.toLowerCase().includes(q)
+        || t.id?.toLowerCase().includes(q) || t.resourceLocation?.toLowerCase().includes(q)
+        || t.category?.toLowerCase().includes(q);
     })
     .sort((a, b) => {
       if (sortBy === 'createdAt') return new Date(b.createdAt) - new Date(a.createdAt);
       if (sortBy === 'priority') {
-        const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-        return (order[a.priority] ?? 99) - (order[b.priority] ?? 99);
+        const o = { CRITICAL:0, HIGH:1, MEDIUM:2, LOW:3 };
+        return (o[a.priority] ?? 99) - (o[b.priority] ?? 99);
       }
       return 0;
     });
 
-  // ── Render guards ─────────────────────────────────────────────────────────
-
-  if (authLoading) return <div style={{ padding: '80px', textAlign: 'center', color: '#94A3B8' }}>Checking authentication…</div>;
-  if (error) return (
-    <div style={{ padding: '80px', textAlign: 'center' }}>
-      <AlertCircle size={48} color="#EF4444" style={{ marginBottom: '16px' }} />
-      <p style={{ color: '#EF4444', fontWeight: 600 }}>{error}</p>
+  if (authLoading) return (
+    <div className="adm-root" style={{ alignItems:'center', color:TOKEN.textSec, display:'flex', height:'60vh', justifyContent:'center' }}>
+      Checking authentication…
     </div>
   );
 
-  // ── Main render ───────────────────────────────────────────────────────────
+  if (error) return (
+    <div className="adm-root" style={{ alignItems:'center', color:'#FCA5A5', display:'flex', flexDirection:'column', height:'60vh', justifyContent:'center', gap:'12px' }}>
+      <AlertCircle size={48} color="#EF4444" />
+      <p style={{ fontWeight:600 }}>{error}</p>
+    </div>
+  );
+
+  const techAvatarColor = (name) => {
+    const palette = ['#6366F1','#10B981','#F59E0B','#EF4444','#3B82F6','#EC4899','#8B5CF6','#06B6D4'];
+    return palette[(name?.charCodeAt(0) || 0) % palette.length];
+  };
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="adm-root adm-fade-in" style={{ maxWidth:'1440px', margin:'0 auto', minHeight:'100vh', padding:'0 0 60px' }}>
+      <style>{globalStyle}</style>
 
       {/* ── Page Header ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
+      <div style={{
+        alignItems:'flex-end', display:'flex', flexWrap:'wrap', gap:'16px',
+        justifyContent:'space-between', marginBottom:'36px',
+      }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'var(--primary-accent)20' }}>
-              <Activity size={22} color="var(--primary-accent)" />
+          <div style={{ alignItems:'center', display:'flex', gap:'10px', marginBottom:'10px' }}>
+            <div style={{
+              alignItems:'center', background:'linear-gradient(135deg,#6366F1,#818CF8)',
+              borderRadius:'10px', boxShadow:'0 4px 14px rgba(99,102,241,0.4)',
+              display:'flex', justifyContent:'center', padding:'9px',
+            }}>
+              <ShieldCheck size={18} color="#fff" />
             </div>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <span style={{ color:'#818CF8', fontSize:'0.75rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase' }}>
               Admin Console
             </span>
           </div>
-          <h1 style={{ margin: 0, fontSize: '2.25rem', fontWeight: 800 }}>Ticket Management</h1>
-          <p style={{ margin: '8px 0 0', color: '#64748B', fontSize: '1rem' }}>
+          <h1 style={{
+            background:'linear-gradient(135deg, #F0F4FF 30%, #818CF8)',
+            WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
+            fontFamily:'Outfit,sans-serif', fontSize:'2.4rem', fontWeight:800,
+            lineHeight:1.15, margin:'0 0 8px',
+          }}>
+            Ticket Management
+          </h1>
+          <p style={{ color:TOKEN.textSec, fontSize:'0.95rem', margin:0 }}>
             Oversee, assign, and resolve all campus maintenance requests.
           </p>
         </div>
-        <button
-          onClick={fetchTickets}
-          className="secondary-btn"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <RefreshCw size={16} /> Refresh
+        <button className="adm-btn-ghost" onClick={fetchTickets} style={{ height:'fit-content' }}>
+          <RefreshCw size={15} className={loading ? 'adm-spin' : ''} /> Refresh
         </button>
       </div>
 
-      {/* ── Stats Row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '36px' }}>
-        <StatCard icon={Activity}   label="Total Tickets"   value={counts.ALL}         color="#6366F1" />
-        <StatCard icon={AlertCircle} label="Open"           value={counts.OPEN}        color="#3B82F6" />
-        <StatCard icon={Clock}       label="In Progress"    value={counts.IN_PROGRESS} color="#F59E0B" />
-        <StatCard icon={CheckCircle} label="Resolved"       value={counts.RESOLVED}    color="#10B981" />
-        <StatCard icon={Users}       label="Unassigned"     value={unassigned}         color="#EF4444" trend={unassigned > 0 ? 'Need attention' : null} />
+      {/* ── Stat Cards ── */}
+      <div style={{ display:'grid', gap:'16px', gridTemplateColumns:'repeat(auto-fit,minmax(195px,1fr))', marginBottom:'32px' }}>
+        {STAT_CARDS.map(({ key, label, icon, from, to, shadow }) => (
+          <StatCard key={key} icon={icon} label={label} value={counts[key] ?? 0} from={from} to={to} shadow={shadow} />
+        ))}
       </div>
 
       {/* ── Filter Bar ── */}
-      <div className="glass-panel" style={{ padding: '20px 24px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{
+        background:TOKEN.surface, border:`1px solid ${TOKEN.border}`,
+        borderRadius:'16px', marginBottom:'20px', padding:'18px 20px',
+      }}>
+        <div style={{ alignItems:'center', display:'flex', flexWrap:'wrap', gap:'12px' }}>
 
           {/* Search */}
-          <div style={{ position: 'relative', flex: '1', minWidth: '220px', maxWidth: '360px' }}>
-            <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input
-              className="premium-input"
-              placeholder="Search tickets, names, locations…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ paddingLeft: '42px', marginBottom: 0 }}
-            />
+          <div style={{ position:'relative', flex:'1', minWidth:'220px', maxWidth:'340px' }}>
+            <Search size={15} color={TOKEN.textMut} style={{ left:'12px', pointerEvents:'none', position:'absolute', top:'50%', transform:'translateY(-50%)' }} />
+            <input className="adm-input" placeholder="Search tickets, names, locations…"
+              value={search} onChange={e => setSearch(e.target.value)}
+              style={{ paddingLeft:'38px' }} />
           </div>
 
-          {/* Status filter */}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'REJECTED', 'CLOSED'].map(s => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                style={{
-                  padding: '7px 14px', borderRadius: '8px', border: '1.5px solid',
-                  borderColor: statusFilter === s ? (STATUS_META[s]?.color || 'var(--primary-accent)') : '#E2E8F0',
-                  background: statusFilter === s ? (STATUS_META[s]?.bg || '#EEF2FF') : 'transparent',
-                  color: statusFilter === s ? (STATUS_META[s]?.color || 'var(--primary-accent)') : '#64748B',
-                  fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  display: 'flex', alignItems: 'center', gap: '6px'
-                }}
-              >
-                {s === 'ALL' ? 'All' : STATUS_META[s]?.label}
-                <span style={{
-                  background: statusFilter === s ? (STATUS_META[s]?.color || 'var(--primary-accent)') : '#CBD5E1',
-                  color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '0.72rem', fontWeight: 700
+          {/* Status Tabs */}
+          <div style={{ alignItems:'center', background:'rgba(255,255,255,0.03)', border:`1px solid ${TOKEN.border}`, borderRadius:'10px', display:'flex', flexWrap:'wrap', gap:'2px', padding:'3px' }}>
+            {['ALL','OPEN','IN_PROGRESS','RESOLVED','REJECTED','CLOSED'].map(s => {
+              const active = statusFilter === s;
+              const meta = STATUS[s];
+              return (
+                <button key={s} onClick={() => setStatusFilter(s)} style={{
+                  alignItems:'center', background: active ? (meta ? meta.bg : 'rgba(99,102,241,0.15)') : 'transparent',
+                  border: active ? `1px solid ${meta ? meta.border : 'rgba(99,102,241,0.4)'}` : '1px solid transparent',
+                  borderRadius:'7px', color: active ? (meta ? meta.color : '#A5B4FC') : TOKEN.textSec,
+                  cursor:'pointer', display:'flex', fontFamily:'Outfit,sans-serif', fontSize:'0.78rem',
+                  fontWeight:700, gap:'5px', padding:'6px 10px', transition:'all 0.15s', whiteSpace:'nowrap',
                 }}>
-                  {s === 'ALL' ? counts.ALL : counts[s] ?? 0}
-                </span>
-              </button>
-            ))}
+                  {s === 'ALL' ? 'All' : meta?.label}
+                  <span style={{
+                    background: active ? (meta ? meta.color : '#6366F1') : TOKEN.border,
+                    borderRadius:'99px', color:'#fff', fontSize:'0.68rem', fontWeight:800,
+                    lineHeight:1, minWidth:'18px', padding:'2px 5px', textAlign:'center',
+                  }}>
+                    {s === 'ALL' ? counts.ALL : counts[s] ?? 0}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Priority filter */}
-          <div style={{ position: 'relative' }}>
-            <select
-              className="premium-input"
-              value={priorityFilter}
-              onChange={e => setPriority(e.target.value)}
-              style={{ marginBottom: 0, paddingRight: '36px', appearance: 'none', minWidth: '130px' }}
-            >
+          {/* Priority select */}
+          <div style={{ position:'relative' }}>
+            <select className="adm-input" value={priorityFilter} onChange={e => setPriority(e.target.value)}
+              style={{ appearance:'none', minWidth:'135px', paddingRight:'34px' }}>
               <option value="ALL">All Priorities</option>
-              <option value="CRITICAL">Critical</option>
-              <option value="HIGH">High</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="LOW">Low</option>
+              {['CRITICAL','HIGH','MEDIUM','LOW'].map(p => <option key={p} value={p}>{p}</option>)}
             </select>
-            <ChevronDown size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94A3B8' }} />
+            <ChevronDown size={13} color={TOKEN.textMut} style={{ pointerEvents:'none', position:'absolute', right:'11px', top:'50%', transform:'translateY(-50%)' }} />
           </div>
 
-          {/* Sort */}
-          <div style={{ position: 'relative' }}>
-            <select
-              className="premium-input"
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              style={{ marginBottom: 0, paddingRight: '36px', appearance: 'none', minWidth: '140px' }}
-            >
+          {/* Sort select */}
+          <div style={{ position:'relative' }}>
+            <select className="adm-input" value={sortBy} onChange={e => setSortBy(e.target.value)}
+              style={{ appearance:'none', minWidth:'135px', paddingRight:'34px' }}>
               <option value="createdAt">Newest First</option>
               <option value="priority">By Priority</option>
             </select>
-            <ChevronDown size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94A3B8' }} />
+            <ChevronDown size={13} color={TOKEN.textMut} style={{ pointerEvents:'none', position:'absolute', right:'11px', top:'50%', transform:'translateY(-50%)' }} />
           </div>
         </div>
       </div>
 
-      {/* ── Ticket Table ── */}
+      {/* ── Table ── */}
       {loading ? (
-        <div className="glass-panel" style={{ padding: '80px', textAlign: 'center', color: '#94A3B8' }}>
-          <RefreshCw size={32} style={{ marginBottom: '16px', opacity: 0.4, animation: 'spin 1s linear infinite' }} />
-          <p style={{ margin: 0, fontWeight: 600 }}>Loading tickets…</p>
+        <div style={{ alignItems:'center', background:TOKEN.surface, border:`1px solid ${TOKEN.border}`, borderRadius:'16px', color:TOKEN.textSec, display:'flex', flexDirection:'column', gap:'12px', justifyContent:'center', minHeight:'260px' }}>
+          <RefreshCw size={28} className="adm-spin" style={{ opacity:.5 }} />
+          <p style={{ color:TOKEN.textSec, fontSize:'0.9rem', fontWeight:600, margin:0 }}>Loading tickets…</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '80px', textAlign: 'center', color: '#94A3B8' }}>
-          <Filter size={48} style={{ marginBottom: '16px', opacity: 0.25 }} />
-          <h3 style={{ margin: '0 0 8px', color: 'var(--text-primary)' }}>No tickets found</h3>
-          <p style={{ margin: 0 }}>Try adjusting your search or filters.</p>
+        <div style={{ alignItems:'center', background:TOKEN.surface, border:`1px solid ${TOKEN.border}`, borderRadius:'16px', color:TOKEN.textSec, display:'flex', flexDirection:'column', gap:'12px', justifyContent:'center', minHeight:'260px' }}>
+          <Filter size={40} style={{ opacity:.2 }} />
+          <div style={{ textAlign:'center' }}>
+            <p style={{ color:TOKEN.textPri, fontWeight:700, margin:'0 0 4px' }}>No tickets found</p>
+            <p style={{ fontSize:'0.88rem', margin:0 }}>Try adjusting your search or filters.</p>
+          </div>
         </div>
       ) : (
-        <div className="glass-panel" style={{ overflow: 'hidden' }}>
-          {/* Table header */}
+        <div style={{ background:TOKEN.surface, border:`1px solid ${TOKEN.border}`, borderRadius:'16px', overflow:'hidden' }}>
+
+          {/* Header Row */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: '90px 1fr 120px 100px 160px 140px 160px',
-            gap: '0',
-            padding: '14px 24px',
-            background: '#F8FAFC',
-            borderBottom: '1px solid #E2E8F0',
+            background:'rgba(255,255,255,0.03)', borderBottom:`1px solid ${TOKEN.border}`,
+            display:'grid', gap:'0',
+            gridTemplateColumns:'88px 1fr 120px 108px 152px 148px 140px',
+            padding:'13px 20px',
           }}>
-            {['Ticket', 'Description', 'Category', 'Priority', 'Status', 'Technician', 'Actions'].map(h => (
-              <span key={h} style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {['Ticket','Description','Category','Priority','Status','Technician','Actions'].map(h => (
+              <span key={h} style={{ color:TOKEN.textMut, fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.09em', textTransform:'uppercase' }}>
                 {h}
               </span>
             ))}
           </div>
 
-          {/* Table rows */}
-          {filtered.map((ticket, idx) => (
-            <div
-              key={ticket.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '90px 1fr 120px 100px 160px 140px 160px',
-                gap: '0',
-                padding: '18px 24px',
-                borderBottom: idx < filtered.length - 1 ? '1px solid #F1F5F9' : 'none',
-                alignItems: 'center',
-                transition: 'background 0.15s ease',
-                background: '#FFFFFF',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = '#FAFBFF'}
-              onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
-            >
-              {/* Ticket ID + time */}
-              <div>
-                <p style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                  #{ticket.id.slice(-5)}
-                </p>
-                <p style={{ margin: '3px 0 0', fontSize: '0.75rem', color: '#94A3B8' }}>
-                  {timeSince(ticket.createdAt)}
-                </p>
-              </div>
+          {/* Data Rows */}
+          {filtered.map((ticket, idx) => {
+            const pMeta = PRIORITY[ticket.priority] || PRIORITY.MEDIUM;
+            const avatarBg = techAvatarColor(ticket.assignedTechnician);
+            return (
+              <div
+                key={ticket.id}
+                className="adm-row-hover"
+                style={{
+                  alignItems:'center', borderBottom: idx < filtered.length-1 ? `1px solid ${TOKEN.border}` : 'none',
+                  borderLeft:`3px solid ${pMeta.color}40`,
+                  display:'grid', gap:'0',
+                  gridTemplateColumns:'88px 1fr 120px 108px 152px 148px 140px',
+                  padding:'16px 20px',
+                  background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)',
+                  transition:'background 0.15s',
+                }}
+              >
+                {/* ID + time */}
+                <div>
+                  <p style={{ color:'#818CF8', fontFamily:'JetBrains Mono,monospace', fontSize:'0.82rem', fontWeight:600, margin:'0 0 3px' }}>
+                    #{ticket.id.slice(-5)}
+                  </p>
+                  <p style={{ color:TOKEN.textMut, fontSize:'0.72rem', margin:0 }}>
+                    {timeSince(ticket.createdAt)}
+                  </p>
+                </div>
 
-              {/* Description + reporter */}
-              <div style={{ paddingRight: '16px' }}>
-                <p style={{
-                  margin: 0, fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)',
-                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.4'
-                }}>
-                  {ticket.description}
-                </p>
-                <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: '#94A3B8' }}>
-                  by {ticket.contactName} · {ticket.resourceLocation}
-                </p>
-              </div>
+                {/* Description + reporter */}
+                <div style={{ paddingRight:'14px' }}>
+                  <p style={{
+                    color:TOKEN.textPri, display:'-webkit-box', fontSize:'0.86rem', fontWeight:600,
+                    lineHeight:'1.4', margin:'0 0 4px', overflow:'hidden',
+                    WebkitBoxOrient:'vertical', WebkitLineClamp:2,
+                  }}>
+                    {ticket.description}
+                  </p>
+                  <p style={{ color:TOKEN.textMut, fontSize:'0.73rem', margin:0 }}>
+                    {ticket.contactName} · {ticket.resourceLocation}
+                  </p>
+                </div>
 
-              {/* Category */}
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 600, background: '#F1F5F9', padding: '4px 8px', borderRadius: '6px' }}>
-                  {ticket.category?.replace('_', ' ') || '—'}
-                </span>
-              </div>
+                {/* Category */}
+                <div>
+                  <span style={{
+                    background:'rgba(255,255,255,0.06)', borderRadius:'7px', color:TOKEN.textSec,
+                    fontSize:'0.75rem', fontWeight:600, padding:'4px 9px', whiteSpace:'nowrap',
+                  }}>
+                    {ticket.category?.replace('_',' ') || '—'}
+                  </span>
+                </div>
 
-              {/* Priority */}
-              <div><PriorityBadge priority={ticket.priority} /></div>
+                {/* Priority */}
+                <div><PriorityBadge priority={ticket.priority} /></div>
 
-              {/* Status */}
-              <div><StatusBadge status={ticket.status} /></div>
+                {/* Status */}
+                <div><StatusBadge status={ticket.status} /></div>
 
-              {/* Technician */}
-              <div>
-                {ticket.assignedTechnician ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{
-                      width: '24px', height: '24px', borderRadius: '50%', background: 'var(--primary-accent)',
-                      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0
-                    }}>
-                      {ticket.assignedTechnician.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {/* Technician */}
+                <div>
+                  {ticket.assignedTechnician ? (
+                    <div style={{ alignItems:'center', display:'flex', gap:'7px' }}>
+                      <div style={{
+                        alignItems:'center', background:avatarBg + '25',
+                        border:`1px solid ${avatarBg}50`, borderRadius:'50%',
+                        color:avatarBg, display:'flex', flexShrink:0,
+                        fontSize:'0.62rem', fontWeight:800, height:'26px',
+                        justifyContent:'center', width:'26px',
+                      }}>
+                        {initials(ticket.assignedTechnician)}
+                      </div>
+                      <span style={{ color:TOKEN.textSec, fontSize:'0.8rem', fontWeight:600 }}>
+                        {ticket.assignedTechnician.split(' ')[0]}
+                      </span>
                     </div>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {ticket.assignedTechnician}
+                  ) : (
+                    <span style={{ alignItems:'center', color:'#FCA5A5', display:'flex', fontSize:'0.78rem', fontWeight:700, gap:'5px' }}>
+                      <span style={{ background:'#EF4444', borderRadius:'50%', display:'inline-block', height:'5px', width:'5px' }} />
+                      Unassigned
                     </span>
-                  </div>
-                ) : (
-                  <span style={{ fontSize: '0.8rem', color: '#EF4444', fontWeight: 600 }}>Unassigned</span>
-                )}
-              </div>
+                  )}
+                </div>
 
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button
-                  title="View ticket"
-                  onClick={() => navigate(`/tickets/${ticket.id}`)}
-                  style={{ padding: '7px', border: '1.5px solid #E2E8F0', borderRadius: '8px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748B', transition: 'all 0.15s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary-accent)'; e.currentTarget.style.color = 'var(--primary-accent)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; }}
-                >
-                  <Eye size={15} />
-                </button>
-
-                {ticket.status !== 'CLOSED' && (
-                  <button
-                    title="Assign technician"
-                    onClick={() => setAssignTarget(ticket)}
-                    style={{ padding: '7px', border: '1.5px solid #E2E8F0', borderRadius: '8px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748B', transition: 'all 0.15s ease' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#10B981'; e.currentTarget.style.color = '#10B981'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; }}
-                  >
-                    <Wrench size={15} />
+                {/* Actions */}
+                <div style={{ alignItems:'center', display:'flex', gap:'6px' }}>
+                  <button title="View" className="adm-action-btn"
+                    onClick={() => navigate(`/tickets/${ticket.id}`)}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(129,140,248,0.5)'; e.currentTarget.style.color='#818CF8'; e.currentTarget.style.background='rgba(99,102,241,0.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(255,255,255,0.04)'; }}>
+                    <Eye size={14} />
                   </button>
-                )}
 
-                {ticket.status !== 'CLOSED' && (
-                  <button
-                    title="Update status"
-                    onClick={() => setStatusTarget(ticket)}
-                    style={{ padding: '7px', border: '1.5px solid #E2E8F0', borderRadius: '8px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748B', transition: 'all 0.15s ease' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#F59E0B'; e.currentTarget.style.color = '#F59E0B'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; }}
-                  >
-                    <TrendingUp size={15} />
-                  </button>
-                )}
+                  {ticket.status !== 'CLOSED' && (
+                    <button title="Assign" className="adm-action-btn"
+                      onClick={() => setAssignTarget(ticket)}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(16,185,129,0.5)'; e.currentTarget.style.color='#34D399'; e.currentTarget.style.background='rgba(16,185,129,0.1)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(255,255,255,0.04)'; }}>
+                      <Wrench size={14} />
+                    </button>
+                  )}
+
+                  {ticket.status !== 'CLOSED' && (
+                    <button title="Update status" className="adm-action-btn"
+                      onClick={() => setStatusTarget(ticket)}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(245,158,11,0.5)'; e.currentTarget.style.color='#FBBF24'; e.currentTarget.style.background='rgba(245,158,11,0.1)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(255,255,255,0.04)'; }}>
+                      <TrendingUp size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
-          {/* Table footer */}
-          <div style={{ padding: '14px 24px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-              Showing <strong>{filtered.length}</strong> of <strong>{tickets.length}</strong> tickets
+          {/* Footer */}
+          <div style={{
+            alignItems:'center', background:'rgba(255,255,255,0.02)', borderTop:`1px solid ${TOKEN.border}`,
+            display:'flex', justifyContent:'space-between', padding:'13px 20px',
+          }}>
+            <span style={{ color:TOKEN.textMut, fontSize:'0.8rem' }}>
+              Showing <strong style={{ color:TOKEN.textSec }}>{filtered.length}</strong> of <strong style={{ color:TOKEN.textSec }}>{tickets.length}</strong> tickets
             </span>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.82rem', color: '#64748B' }}>
-              <Wrench size={14} /> Assign · <TrendingUp size={14} /> Status · <Eye size={14} /> View
+            <div style={{ alignItems:'center', color:TOKEN.textMut, display:'flex', fontSize:'0.75rem', gap:'12px' }}>
+              <span style={{ alignItems:'center', display:'flex', gap:'4px' }}><Eye size={12} /> View</span>
+              <span style={{ alignItems:'center', display:'flex', gap:'4px' }}><Wrench size={12} /> Assign</span>
+              <span style={{ alignItems:'center', display:'flex', gap:'4px' }}><TrendingUp size={12} /> Status</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Modals ── */}
-      {assignTarget && (
-        <AssignModal
-          ticket={assignTarget}
-          onClose={() => setAssignTarget(null)}
-          onAssigned={fetchTickets}
-        />
-      )}
-      {statusTarget && (
-        <StatusModal
-          ticket={statusTarget}
-          onClose={() => setStatusTarget(null)}
-          onUpdated={fetchTickets}
-        />
-      )}
+      {assignTarget && <AssignModal ticket={assignTarget} onClose={() => setAssignTarget(null)} onAssigned={fetchTickets} />}
+      {statusTarget && <StatusModal ticket={statusTarget} onClose={() => setStatusTarget(null)} onUpdated={fetchTickets} />}
     </div>
   );
 };
