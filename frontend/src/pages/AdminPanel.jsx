@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import api from '../utils/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import UserManagement from '../components/UserManagement';
+import ResourceManagement from '../components/Admin/ResourceManagement';
+import AdminAnalytics from '../components/Admin/AdminAnalytics';
 
 const AdminPanel = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUserId, setEditingUserId] = useState('');
@@ -32,8 +35,10 @@ const AdminPanel = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab]);
 
   const handleEditRole = (targetUser) => {
     setEditingUserId(targetUser.id);
@@ -82,24 +87,54 @@ const AdminPanel = () => {
     <section className="admin-page">
       <div className="container">
         <div className="admin-header">
-          <h1 className="admin-title">Admin Panel</h1>
-          <p className="admin-subtitle">Manage user access roles for Smart Campus Operations Hub.</p>
+          <h1 className="admin-title">Admin Control Center</h1>
+          <p className="admin-subtitle">Manage workspace resources, users, and track campus operations.</p>
+        </div>
+
+        <div className="admin-tabs">
+          <button
+            className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+            type="button"
+          >
+            Users
+          </button>
+          <button
+            className={`admin-tab ${activeTab === 'resources' ? 'active' : ''}`}
+            onClick={() => setActiveTab('resources')}
+            type="button"
+          >
+            Resources
+          </button>
+          <button
+            className={`admin-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+            type="button"
+          >
+            Analytics
+          </button>
         </div>
 
         {toast.message && <div className={`toast toast--${toast.type}`}>{toast.message}</div>}
 
-        <UserManagement
-          users={users}
-          loading={loading}
-          editingUserId={editingUserId}
-          selectedRole={selectedRole}
-          selectedTechCategory={selectedTechCategory}
-          onEditRole={handleEditRole}
-          onRoleChange={setSelectedRole}
-          onTechCategoryChange={setSelectedTechCategory}
-          onCancel={handleCancel}
-          onConfirm={handleConfirmRoleChange}
-        />
+        <div className="admin-content">
+          {activeTab === 'users' && (
+            <UserManagement
+              users={users}
+              loading={loading}
+              editingUserId={editingUserId}
+              selectedRole={selectedRole}
+              selectedTechCategory={selectedTechCategory}
+              onEditRole={handleEditRole}
+              onRoleChange={setSelectedRole}
+              onTechCategoryChange={setSelectedTechCategory}
+              onCancel={handleCancel}
+              onConfirm={handleConfirmRoleChange}
+            />
+          )}
+          {activeTab === 'resources' && <ResourceManagement />}
+          {activeTab === 'analytics' && <AdminAnalytics />}
+        </div>
       </div>
     </section>
   );

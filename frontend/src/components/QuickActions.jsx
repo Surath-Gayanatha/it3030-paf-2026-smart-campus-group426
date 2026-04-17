@@ -2,7 +2,7 @@ const actionCards = [
   {
     title: 'Book Facilities',
     description: 'Reserve lecture halls, laboratories, and equipment with approval tracking.',
-    href: '#bookings',
+    href: '/resources',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="3" y="4" width="18" height="17" rx="2" ry="2" />
