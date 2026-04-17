@@ -11,7 +11,7 @@ const Navbar = () => {
     { label: 'Home', href: '#', active: true },
     { label: 'Resources', href: '#resources' },
     { label: 'Bookings', href: '#bookings' },
-    { label: 'Tickets', href: '#dashboard' },
+    { label: 'Tickets', href: '/tickets' },
     { label: 'Dashboard', href: '#dashboard' },
   ], []);
 
@@ -45,15 +45,26 @@ const Navbar = () => {
         <ul className="navbar__nav" role="menubar">
           {navLinks.map((link) => (
             <li key={link.label} role="none">
-              <a
-                href={link.href}
-                className={`nav-link${link.active ? ' active' : ''}`}
-                role="menuitem"
-                id={`nav-${link.label.toLowerCase()}`}
-                aria-current={link.active ? 'page' : undefined}
-              >
-                {link.label}
-              </a>
+              {link.href.startsWith('/') ? (
+                <Link
+                  to={link.href}
+                  className={`nav-link${link.active ? ' active' : ''}`}
+                  role="menuitem"
+                  id={`nav-${link.label.toLowerCase()}`}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  href={link.href}
+                  className={`nav-link${link.active ? ' active' : ''}`}
+                  role="menuitem"
+                  id={`nav-${link.label.toLowerCase()}`}
+                  aria-current={link.active ? 'page' : undefined}
+                >
+                  {link.label}
+                </a>
+              )}
             </li>
           ))}
         </ul>

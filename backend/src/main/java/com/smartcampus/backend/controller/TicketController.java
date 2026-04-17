@@ -8,6 +8,7 @@ import com.smartcampus.backend.model.TicketStatus;
 import com.smartcampus.backend.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
@@ -38,10 +40,16 @@ public class TicketController {
 
     // POST /api/tickets/{id}/images - Upload Cloudinary Images
     @PostMapping("/{id}/images")
-    public ResponseEntity<TicketResponse> uploadImages(
+    public ResponseEntity<?> uploadImages(
             @PathVariable String id,
             @RequestParam("images") List<MultipartFile> images) {
-        return ResponseEntity.ok(ticketService.uploadImages(id, images));
+        try {
+            return ResponseEntity.ok(ticketService.uploadImages(id, images));
+        } catch (RuntimeException e) {
+            log.error("Image upload failed for ticket {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", e.getMessage()));
+        }
     }
 
     // GET /api/tickets — admin only, optional ?status=OPEN&priority=HIGH
