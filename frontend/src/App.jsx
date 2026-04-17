@@ -10,6 +10,8 @@ import Stats from './components/Stats';
 import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
+import OnboardingPage from './pages/OnboardingPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const HomePage = () => {
   return (
@@ -33,6 +35,14 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+          <Route
+            path="/onboarding"
+            element={(
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            )}
+          />
           <Route
             path="/admin"
             element={(
