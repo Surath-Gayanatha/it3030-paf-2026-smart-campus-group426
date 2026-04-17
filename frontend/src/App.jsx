@@ -10,7 +10,8 @@ import Stats from './components/Stats';
 import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
-
+import OnboardingPage from './pages/OnboardingPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import Resources from './pages/Resources';
 import AddFacility from './pages/AddFacility';
 import FacilityDetail from './pages/FacilityDetail';
@@ -40,6 +41,14 @@ function App() {
           <Route path="/facilities/:id" element={<FacilityDetail />} />
           <Route path="/facilities/create" element={<AddFacility />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+          <Route
+            path="/onboarding"
+            element={(
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            )}
+          />
           <Route
             path="/admin"
             element={(

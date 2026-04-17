@@ -17,9 +17,14 @@ const OAuth2RedirectHandler = () => {
 
     localStorage.setItem('token', token);
 
-    refreshUser().finally(() => {
-      navigate('/', { replace: true });
-    });
+    refreshUser()
+      .then((currentUser) => {
+        const shouldOnboard = currentUser && currentUser.onboardingCompleted === false;
+        navigate(shouldOnboard ? '/onboarding' : '/', { replace: true });
+      })
+      .catch(() => {
+        navigate('/', { replace: true });
+      });
   }, [navigate, refreshUser, searchParams]);
 
   return <div className="route-loading">Signing you in...</div>;

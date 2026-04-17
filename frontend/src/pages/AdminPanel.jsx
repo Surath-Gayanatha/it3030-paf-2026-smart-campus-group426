@@ -12,6 +12,7 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [editingUserId, setEditingUserId] = useState('');
   const [selectedRole, setSelectedRole] = useState('USER');
+  const [selectedTechCategory, setSelectedTechCategory] = useState('IT_EQUIPMENT');
   const [toast, setToast] = useState({ type: '', message: '' });
 
   const showToast = (type, message) => {
@@ -41,22 +42,24 @@ const AdminPanel = () => {
 
   const handleEditRole = (targetUser) => {
     setEditingUserId(targetUser.id);
-    setSelectedRole(targetUser.role);
+    setSelectedRole(targetUser.roleRequestStatus === 'PENDING' ? targetUser.requestedRole : targetUser.role);
+    setSelectedTechCategory(targetUser.roleRequestStatus === 'PENDING' ? (targetUser.requestedTechCategory || 'IT_EQUIPMENT') : (targetUser.techCategory || 'IT_EQUIPMENT'));
   };
 
   const handleCancel = () => {
     setEditingUserId('');
     setSelectedRole('USER');
+    setSelectedTechCategory('IT_EQUIPMENT');
   };
 
   const handleConfirmRoleChange = async (targetUser) => {
-    if (selectedRole === targetUser.role) {
+    if (selectedRole === targetUser.role && selectedTechCategory === targetUser.techCategory) {
       handleCancel();
       return;
     }
 
     const confirmation = window.confirm(
-      `Change role for ${targetUser.name || targetUser.email} from ${targetUser.role} to ${selectedRole}?`
+      `Change role for ${targetUser.name || targetUser.email} to ${selectedRole}${selectedRole === 'TECHNICIAN' ? ` (${selectedTechCategory})` : ''}?`
     );
 
     if (!confirmation) {
@@ -65,7 +68,7 @@ const AdminPanel = () => {
 
     try {
       const response = await api.put(`/auth/users/${targetUser.id}/role`, null, {
-        params: { role: selectedRole },
+        params: { role: selectedRole, techCategory: selectedTechCategory },
       });
 
       setUsers((prev) => prev.map((item) => (item.id === targetUser.id ? response.data : item)));
@@ -89,21 +92,24 @@ const AdminPanel = () => {
         </div>
 
         <div className="admin-tabs">
-          <button 
-            className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`} 
+          <button
+            className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
+            type="button"
           >
             Users
           </button>
-          <button 
-            className={`admin-tab ${activeTab === 'resources' ? 'active' : ''}`} 
+          <button
+            className={`admin-tab ${activeTab === 'resources' ? 'active' : ''}`}
             onClick={() => setActiveTab('resources')}
+            type="button"
           >
             Resources
           </button>
-          <button 
-            className={`admin-tab ${activeTab === 'analytics' ? 'active' : ''}`} 
+          <button
+            className={`admin-tab ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
+            type="button"
           >
             Analytics
           </button>
@@ -118,8 +124,10 @@ const AdminPanel = () => {
               loading={loading}
               editingUserId={editingUserId}
               selectedRole={selectedRole}
+              selectedTechCategory={selectedTechCategory}
               onEditRole={handleEditRole}
               onRoleChange={setSelectedRole}
+              onTechCategoryChange={setSelectedTechCategory}
               onCancel={handleCancel}
               onConfirm={handleConfirmRoleChange}
             />

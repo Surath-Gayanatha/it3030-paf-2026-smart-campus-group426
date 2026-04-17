@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 const actionCards = [
   {
     title: 'Book Facilities',
@@ -17,7 +15,7 @@ const actionCards = [
   {
     title: 'View My Bookings',
     description: 'Check your approved, pending, and upcoming campus resource bookings.',
-    href: '/dashboard',
+    href: '#dashboard',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M9 11l3 3L22 4" />
@@ -28,7 +26,7 @@ const actionCards = [
   {
     title: 'Report Incident',
     description: 'Submit maintenance and safety incidents with location and priority details.',
-    href: '/tickets',
+    href: '#dashboard',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
@@ -40,7 +38,7 @@ const actionCards = [
   {
     title: 'Track Tickets',
     description: 'Monitor incident progress, status updates, and maintenance resolution notes.',
-    href: '/tickets',
+    href: '#dashboard',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -51,11 +49,11 @@ const actionCards = [
 
 const QuickActions = () => {
   return (
-    <section className="quick-actions" id="quick-actions" aria-label="Quick actions">
+    <section className="quick-actions" id="bookings" aria-label="Quick actions">
       <div className="container">
         <div className="quick-actions__grid">
           {actionCards.map((card) => (
-            <Link className="action-card" to={card.href} key={card.title}>
+            <a className="action-card" href={card.href} key={card.title}>
               <span className="action-card__icon">{card.icon}</span>
               <h3 className="action-card__title">{card.title}</h3>
               <p className="action-card__desc">{card.description}</p>
@@ -66,7 +64,7 @@ const QuickActions = () => {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </span>
-            </Link>
+            </a>
           ))}
         </div>
       </div>

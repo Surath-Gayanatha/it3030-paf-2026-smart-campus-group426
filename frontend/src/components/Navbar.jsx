@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -8,12 +8,11 @@ const Navbar = () => {
   const { user, login, logout } = useAuth();
 
   const navLinks = useMemo(() => [
-    { label: 'Home', href: '/' },
+    { label: 'Home', href: '/', active: true },
     { label: 'Facilities', href: '/resources' },
-    { label: 'Add Facility', href: '/facilities/create' },
-    { label: 'Bookings', href: '/bookings' },
-    { label: 'Tickets', href: '/tickets' },
-    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Bookings', href: '#bookings' },
+    { label: 'Tickets', href: '#dashboard' },
+    { label: 'Dashboard', href: '#dashboard' },
   ], []);
 
   const initials = user?.name
@@ -25,13 +24,11 @@ const Navbar = () => {
         .toUpperCase()
     : 'SC';
 
-  const createNavId = (label) => `nav-${label.toLowerCase().replace(/\s+/g, '-')}`;
-
   return (
     <nav className="navbar" role="navigation" aria-label="Main navigation">
       <div className="navbar__inner">
         {/* Brand */}
-        <Link to="/" className="navbar__brand" id="navbar-brand">
+        <a href="/" className="navbar__brand" id="navbar-brand">
           <div className="navbar__logo" aria-hidden="true">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -42,20 +39,21 @@ const Navbar = () => {
             Smart Campus Operations Hub
             <span>University Management System</span>
           </div>
-        </Link>
+        </a>
 
         {/* Nav Links */}
         <ul className="navbar__nav" role="menubar">
           {navLinks.map((link) => (
             <li key={link.label} role="none">
-              <NavLink
-                to={link.href}
-                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              <a
+                href={link.href}
+                className={`nav-link${link.active ? ' active' : ''}`}
                 role="menuitem"
-                id={createNavId(link.label)}
+                id={`nav-${link.label.toLowerCase()}`}
+                aria-current={link.active ? 'page' : undefined}
               >
                 {link.label}
-              </NavLink>
+              </a>
             </li>
           ))}
         </ul>
