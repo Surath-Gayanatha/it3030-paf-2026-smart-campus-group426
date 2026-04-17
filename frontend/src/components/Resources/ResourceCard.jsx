@@ -1,14 +1,36 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const slugify = (value = '') => value
+  .toLowerCase()
+  .trim()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '');
+
+const getStatusMeta = (status) => {
+  switch (status) {
+    case 'ACTIVE':
+      return { label: 'AVAILABLE', className: 'available' };
+    case 'OUT_OF_SERVICE':
+      return { label: 'MAINTENANCE', className: 'maintenance' };
+    default:
+      return {
+        label: status ? status.replace('_', ' ') : 'UNKNOWN',
+        className: status ? slugify(status) : 'unknown',
+      };
+  }
+};
+
 const ResourceCard = ({ resource }) => {
   const navigate = useNavigate();
-  const statusLabel = resource.status ? resource.status.replace('_', ' ') : 'UNKNOWN';
-  const statusClass = resource.status ? resource.status.toLowerCase() : 'unknown';
+  const resourceClass = slugify(resource.name) || 'item';
+  const statusMeta = getStatusMeta(resource.status);
+  const statusLabel = statusMeta.label;
+  const statusClass = statusMeta.className;
   const availabilityWindows = resource.availabilityWindows || [];
 
   return (
-    <div className="resource-card">
+    <div className={`resource-card resource-card--${resourceClass}`}>
       <div className="resource-card__image-container">
         <img 
           src={resource.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'} 

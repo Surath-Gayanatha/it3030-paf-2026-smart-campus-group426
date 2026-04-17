@@ -960,6 +960,39 @@
   transform: scale(1.06);
 }
 
+.resource-card--main-lecture-hall .resource-card__image-container {
+  aspect-ratio: 16 / 10;
+}
+
+.resource-card--main-lecture-hall .resource-card__image {
+  object-position: center 38%;
+}
+
+.resource-card--advanced-robotics-lab .resource-card__image-container {
+  aspect-ratio: 4 / 3;
+}
+
+.resource-card--advanced-robotics-lab .resource-card__image {
+  object-position: center 42%;
+}
+
+.resource-card--executive-meeting-room .resource-card__image-container {
+  aspect-ratio: 16 / 10;
+}
+
+.resource-card--executive-meeting-room .resource-card__image {
+  object-position: center 40%;
+}
+
+.resource-card--4k-cinematic-camera .resource-card__image-container {
+  aspect-ratio: 5 / 4;
+}
+
+.resource-card--4k-cinematic-camera .resource-card__image {
+  object-position: center 45%;
+  transform: scale(1.08);
+}
+
 .resource-card__status {
   position: absolute;
   top: 1rem;
