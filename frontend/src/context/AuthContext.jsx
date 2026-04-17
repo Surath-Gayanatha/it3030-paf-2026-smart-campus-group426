@@ -12,16 +12,18 @@ export const AuthProvider = ({ children }) => {
     if (!token) {
       setUser(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     try {
       const response = await api.get('/auth/me');
       console.log('✅ User logged in:', response.data);
       setUser(response.data);
+      return response.data;
     } catch (error) {
       localStorage.removeItem('token');
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }

@@ -12,6 +12,10 @@ import TicketCreate from './pages/TicketCreate';
 import TicketList from './pages/TicketList';
 import TicketDetail from './pages/TicketDetail';
 import AdminView from './pages/AdminView';
+import AdminPanel from './pages/AdminPanel';
+import OnboardingPage from './pages/OnboardingPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 const HomePage = () => {
   return (
@@ -38,10 +42,24 @@ function App() {
           <Route path="/tickets" element={<TicketList />} />
           <Route path="/tickets/create" element={<TicketCreate />} />
           <Route path="/tickets/:id" element={<TicketDetail />} />
+          <Route path="/admin-ticketing" element={<AdminView />} />
 
-          {/* For now - open access to test admin view */}
-          <Route path="/admin" element={<AdminView />} />
-
+          <Route
+            path="/onboarding"
+            element={(
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/admin"
+            element={(
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            )}
+          />
         </Routes>
       </div>
     </AuthProvider>

@@ -36,7 +36,7 @@ const AdminPanel = () => {
 
   const handleEditRole = (targetUser) => {
     setEditingUserId(targetUser.id);
-    setSelectedRole(targetUser.role);
+    setSelectedRole(targetUser.roleRequestStatus === 'PENDING' ? targetUser.requestedRole : targetUser.role);
   };
 
   const handleCancel = () => {

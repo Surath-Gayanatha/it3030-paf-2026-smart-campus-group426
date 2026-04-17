@@ -27,6 +27,20 @@ public class AuthController {
         return ResponseEntity.ok(UserResponse.fromUser(user));
     }
 
+    // Submit role request from onboarding - USER side
+    @PostMapping("/me/role-request")
+    public ResponseEntity<UserResponse> submitRoleRequest(@RequestParam Role role) {
+        User updatedUser = userService.submitRoleRequest(role);
+        return ResponseEntity.ok(UserResponse.fromUser(updatedUser));
+    }
+
+    // Complete onboarding without role request
+    @PostMapping("/me/onboarding/complete")
+    public ResponseEntity<UserResponse> completeOnboarding() {
+        User updatedUser = userService.completeOnboarding();
+        return ResponseEntity.ok(UserResponse.fromUser(updatedUser));
+    }
+
     // Logout - frontend just deletes the token
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {

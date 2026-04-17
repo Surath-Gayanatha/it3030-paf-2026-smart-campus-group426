@@ -1090,9 +1090,81 @@
   background-color: #FEE2E2;
 }
 
+.user-role--lecturer {
+  color: #92400E;
+  background-color: #FEF3C7;
+}
+
 .user-role--technician {
   color: var(--color-success);
   background-color: #DCFCE7;
+}
+
+.user-role--pending {
+  color: #1D4ED8;
+  background-color: #DBEAFE;
+}
+
+.onboarding-page {
+  padding: 48px 0;
+}
+
+.onboarding-card {
+  max-width: 760px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 28px;
+}
+
+.onboarding-card h1 {
+  margin-bottom: 8px;
+}
+
+.onboarding-card p {
+  color: var(--color-text-secondary);
+}
+
+.onboarding-role-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.onboarding-role {
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  padding: 16px;
+}
+
+.onboarding-role h3 {
+  margin-bottom: 8px;
+}
+
+.onboarding-role span {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.onboarding-role--active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.onboarding-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.onboarding-error {
+  margin-top: 12px;
+  color: var(--color-error);
 }
 
 .admin-actions {
