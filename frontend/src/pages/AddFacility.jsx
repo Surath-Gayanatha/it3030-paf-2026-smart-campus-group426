@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import ResourceForm from '../components/Resources/ResourceForm';
+import { useAuth } from '../context/AuthContext';
 import './Resources.css';
 
 const highlights = [
@@ -10,6 +11,16 @@ const highlights = [
 ];
 
 const AddFacility = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="route-loading">Loading...</div>;
+  }
+
+  if (user?.role !== 'ADMIN') {
+    return <Navigate to="/admin-login" replace />;
+  }
+
   return (
     <div className="resources-page facility-create-page">
       <section className="facility-create-hero">

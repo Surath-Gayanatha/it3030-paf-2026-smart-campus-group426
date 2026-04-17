@@ -58,7 +58,7 @@ public class OAuth2AuthenticationSuccessHandler
                     .role(assignedRole)
                     .provider("google")
                     .build();
-            userRepository.save(user);
+            user = userRepository.save(user);
         } else {
             user = existingUser.get();
             if (isAdminEmail(email) && user.getRole() != Role.ADMIN) {
@@ -78,7 +78,7 @@ public class OAuth2AuthenticationSuccessHandler
     }
 
     private boolean isAdminEmail(String email) {
-        if (email == null || email.isBlank()) {
+        if (email == null || email.isBlank() || adminEmailsConfig == null || adminEmailsConfig.isBlank()) {
             return false;
         }
 
