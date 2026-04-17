@@ -45,7 +45,7 @@ const Resources = () => {
             </p>
 
             <div className="facility-hero__actions">
-              <Link to="/facilities/create" className="btn-primary">Add a facility</Link>
+              <Link to="/admin-login" className="btn-primary">Add a facility</Link>
               <a href="#resources" className="btn-secondary">Explore facilities</a>
             </div>
 
