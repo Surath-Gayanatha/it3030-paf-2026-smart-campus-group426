@@ -2,16 +2,20 @@ import './App.css';
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
-import AdminRoute from './components/AdminRoute';
 import Hero from './components/Hero';
 import QuickActions from './components/QuickActions';
 import Features from './components/Features';
 import Stats from './components/Stats';
 import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
+import TicketCreate from './pages/TicketCreate';
+import TicketList from './pages/TicketList';
+import TicketDetail from './pages/TicketDetail';
+import AdminView from './pages/AdminView';
 import AdminPanel from './pages/AdminPanel';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import AdminLogin from './pages/AdminLogin';
 import Resources from './pages/Resources';
 import AddFacility from './pages/AddFacility';
@@ -43,6 +47,46 @@ function App() {
           <Route path="/facilities/:id" element={<FacilityDetail />} />
           <Route path="/facilities/create" element={<AddFacility />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+          <Route 
+            path="/tickets" 
+            element={
+              <ProtectedRoute>
+                <TicketList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/tickets/create" 
+            element={
+              <ProtectedRoute allowedRoles={['LECTURER', 'STUDENT']}>
+                <TicketCreate />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/tickets/assigned" 
+            element={
+              <ProtectedRoute allowedRoles={['TECHNICIAN']}>
+                <TicketList isAssignedView={true} />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/tickets/:id" 
+            element={
+              <ProtectedRoute>
+                <TicketDetail />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin-ticketing" 
+            element={
+              <AdminRoute>
+                <AdminView />
+              </AdminRoute>
+            } 
+          />
           <Route
             path="/onboarding"
             element={(

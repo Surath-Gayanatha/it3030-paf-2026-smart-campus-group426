@@ -7,14 +7,25 @@ const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
   const { user, login, logout } = useAuth();
 
-  const navLinks = useMemo(() => [
-    { label: 'Home', href: '/', active: true },
-    { label: 'Facilities', href: '/resources' },
-    { label: 'Add Facility', href: '/admin-login' },
-    { label: 'Bookings', href: '#bookings' },
-    { label: 'Tickets', href: '#dashboard' },
-    { label: 'Dashboard', href: '#dashboard' },
-  ], []);
+  const navLinks = useMemo(() => {
+    const isTicketsAdmin = user?.role === 'ADMIN';
+    const isTechnician = user?.role === 'TECHNICIAN';
+    
+    const links = [
+      { label: 'Home', href: '/', active: true },
+      { label: 'Facilities', href: '/resources' },
+      { label: 'Add Facility', href: '/admin-login' },
+      { label: 'Bookings', href: '#bookings' },
+      { label: 'Tickets', href: isTicketsAdmin ? '/admin-ticketing' : '/tickets' },
+    ];
+
+    if (isTechnician) {
+      links.push({ label: 'Tasks', href: '/tickets/assigned' });
+    }
+
+    links.push({ label: 'Dashboard', href: '#dashboard' });
+    return links;
+  }, [user?.role]);
 
   const initials = user?.name
     ? user.name
@@ -46,15 +57,26 @@ const Navbar = () => {
         <ul className="navbar__nav" role="menubar">
           {navLinks.map((link) => (
             <li key={link.label} role="none">
-              <a
-                href={link.href}
-                className={`nav-link${link.active ? ' active' : ''}`}
-                role="menuitem"
-                id={`nav-${link.label.toLowerCase()}`}
-                aria-current={link.active ? 'page' : undefined}
-              >
-                {link.label}
-              </a>
+              {link.href.startsWith('/') ? (
+                <Link
+                  to={link.href}
+                  className={`nav-link${link.active ? ' active' : ''}`}
+                  role="menuitem"
+                  id={`nav-${link.label.toLowerCase()}`}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  href={link.href}
+                  className={`nav-link${link.active ? ' active' : ''}`}
+                  role="menuitem"
+                  id={`nav-${link.label.toLowerCase()}`}
+                  aria-current={link.active ? 'page' : undefined}
+                >
+                  {link.label}
+                </a>
+              )}
             </li>
           ))}
         </ul>
