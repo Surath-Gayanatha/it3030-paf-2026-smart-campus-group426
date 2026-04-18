@@ -1,15 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { getBookings, updateBookingStatus } from '../../api/booking.api';
+import api from '../../utils/axiosConfig';
 import './Bookings.css';
 
-const BookingList = ({ onEdit, onReview, isAdmin, statusFilter }) => {
+const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) => {
     const [bookings, setBookings] = useState([]);
+    const [resources, setResources] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchBookings();
+        const init = async () => {
+             await fetchResources();
+             await fetchBookings();
+        };
+        init();
     }, []);
+
+    const fetchResources = async () => {
+        try {
+            const response = await api.get('/resources');
+            const resourceMap = {};
+            response.data.forEach(res => {
+                resourceMap[res.id] = `${res.name} (${res.location || res.type})`;
+            });
+            setResources(resourceMap);
+        } catch (err) {
+            console.error("Failed to fetch resources catalog", err);
+        }
+    };
 
     const fetchBookings = async () => {
         try {
@@ -52,7 +71,7 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter }) => {
                             {booking.status}
                         </span>
                         <div className="booking-info">
-                            <h3>Resource: {booking.resourceId}</h3>
+                            <h3>Resource: {resources[booking.resourceId] || booking.resourceId}</h3>
                             <p><strong>Purpose:</strong> {booking.purpose}</p>
                             <p><strong>From:</strong> {formatDate(booking.startTime)}</p>
                             <p><strong>To:</strong> {formatDate(booking.endTime)}</p>
@@ -65,13 +84,15 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter }) => {
                         </div>
                         
                         <div className="booking-actions">
-                            {booking.status === 'PENDING' && !isAdmin && (
+                            {/* ANY user can Edit/Cancel their OWN pending bookings, even admins! */}
+                            {booking.status === 'PENDING' && currentUser?.id === booking.userId && (
                                 <button className="btn-primary" onClick={() => onEdit(booking)}>Edit</button>
                             )}
-                            {(booking.status === 'PENDING' || booking.status === 'APPROVED') && !isAdmin && (
+                            {(booking.status === 'PENDING' || booking.status === 'APPROVED') && currentUser?.id === booking.userId && (
                                 <button className="btn-ghost" style={{color: 'red', borderColor: 'red'}} onClick={() => handleCancel(booking)}>Cancel</button>
                             )}
-                            {booking.status === 'PENDING' && isAdmin && (
+                            {/* Admins can review PENDING bookings from OTHER users */}
+                            {booking.status === 'PENDING' && isAdmin && currentUser?.id !== booking.userId && (
                                 <button className="btn-primary" onClick={() => onReview(booking)}>Review</button>
                             )}
                         </div>

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -27,8 +28,17 @@ public class BookingService {
 
     public Booking createBooking(BookingRequestDTO requestDTO, String userEmail) {
         // Validate dates
+        if (requestDTO.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start time cannot be in the past");
+        }
+        
         if (requestDTO.getStartTime().isAfter(requestDTO.getEndTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start time must be before end time");
+        }
+
+        long durationMinutes = ChronoUnit.MINUTES.between(requestDTO.getStartTime(), requestDTO.getEndTime());
+        if (durationMinutes < 15) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking must be at least 15 minutes long");
         }
 
         User user = userRepository.findByEmail(userEmail)
@@ -76,8 +86,17 @@ public class BookingService {
     }
 
     public Booking updateBooking(String id, BookingRequestDTO requestDTO, String userEmail) {
+        if (requestDTO.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start time cannot be in the past");
+        }
+
         if (requestDTO.getStartTime().isAfter(requestDTO.getEndTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start time must be before end time");
+        }
+
+        long durationMinutes = ChronoUnit.MINUTES.between(requestDTO.getStartTime(), requestDTO.getEndTime());
+        if (durationMinutes < 15) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking must be at least 15 minutes long");
         }
 
         User user = userRepository.findByEmail(userEmail)

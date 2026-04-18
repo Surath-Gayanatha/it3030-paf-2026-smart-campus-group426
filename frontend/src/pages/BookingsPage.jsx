@@ -63,6 +63,7 @@ const BookingsPage = () => {
             <BookingList 
                 key={refreshKey}
                 isAdmin={isAdmin} 
+                currentUser={user}
                 onEdit={handleEdit} 
                 onReview={handleReview} 
                 statusFilter={statusFilter}
