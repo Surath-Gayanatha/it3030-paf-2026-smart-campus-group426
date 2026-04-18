@@ -5,6 +5,8 @@ const initialFormState = {
   name: '',
   type: 'Lecture Hall',
   capacity: '',
+  availableDate: '',
+  availableTime: '',
   location: '',
   description: '',
   imageUrl: '',
@@ -80,10 +82,15 @@ const ResourceForm = ({ onCreated }) => {
     }
 
     try {
+      const { availableDate, availableTime, ...resourceDetails } = formData;
+      const availabilityDateTime = availableDate && availableTime
+        ? `${availableDate}T${availableTime}`
+        : '';
+
       const payload = {
-        ...formData,
+        ...resourceDetails,
         capacity: Number(formData.capacity),
-        availabilityWindows: [],
+        availabilityWindows: availabilityDateTime ? [availabilityDateTime] : [],
       };
 
       await api.post('/resources', payload);
@@ -148,6 +155,28 @@ const ResourceForm = ({ onCreated }) => {
               onChange={handleChange}
               placeholder="120"
               min="1"
+              required
+            />
+          </label>
+
+          <label className="facility-form__field">
+            <span>Available date</span>
+            <input
+              type="date"
+              name="availableDate"
+              value={formData.availableDate}
+              onChange={handleChange}
+              required
+            />
+          </label>
+
+          <label className="facility-form__field">
+            <span>Available time</span>
+            <input
+              type="time"
+              name="availableTime"
+              value={formData.availableTime}
+              onChange={handleChange}
               required
             />
           </label>
