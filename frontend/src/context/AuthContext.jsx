@@ -12,15 +12,17 @@ export const AuthProvider = ({ children }) => {
     if (!token) {
       setUser(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     try {
       const response = await api.get('/auth/me');
       setUser(response.data);
+      return response.data;
     } catch (error) {
       localStorage.removeItem('token');
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -30,7 +32,8 @@ export const AuthProvider = ({ children }) => {
     fetchCurrentUser();
   }, []);
 
-  const login = () => {
+  const login = (redirectTo = '/') => {
+    sessionStorage.setItem('postLoginRedirect', redirectTo || '/');
     window.location.href = 'http://localhost:8081/oauth2/authorization/google';
   };
 
