@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
@@ -34,11 +35,20 @@ const truncate = (text, max = 60) => {
 
 const NotificationsPage = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [selectedId, setSelectedId] = useState('');
   const [error, setError] = useState('');
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/');
+  };
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -166,6 +176,24 @@ const NotificationsPage = () => {
       padding: '24px 16px 40px',
     }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{
+            marginBottom: '12px',
+            border: '1px solid #cbd5e1',
+            background: '#ffffff',
+            color: '#334155',
+            borderRadius: '8px',
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            padding: '8px 12px',
+            cursor: 'pointer',
+          }}
+        >
+          ← Back
+        </button>
+
         {error && (
           <div style={{
             marginBottom: '12px',

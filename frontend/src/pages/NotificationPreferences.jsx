@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,10 +21,19 @@ const initialPreferences = {
 
 const NotificationPreferences = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState(initialPreferences);
   const [toast, setToast] = useState({ type: '', message: '' });
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/');
+  };
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -113,6 +123,24 @@ const NotificationPreferences = () => {
         maxWidth: '920px',
         margin: '0 auto',
       }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{
+            marginBottom: '12px',
+            border: '1px solid #cbd5e1',
+            background: '#ffffff',
+            color: '#334155',
+            borderRadius: '8px',
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            padding: '8px 12px',
+            cursor: 'pointer',
+          }}
+        >
+          ← Back
+        </button>
+
         <div style={{
           marginBottom: '18px',
         }}>
