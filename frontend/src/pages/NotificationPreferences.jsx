@@ -26,6 +26,11 @@ const NotificationPreferences = () => {
   const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState(initialPreferences);
   const [toast, setToast] = useState({ type: '', message: '' });
+  const isAdmin = user?.role === 'ADMIN';
+
+  const visiblePreferenceEntries = isAdmin
+    ? [['ticketStatusChanged', rowLabelMap.ticketStatusChanged]]
+    : Object.entries(rowLabelMap);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -158,7 +163,9 @@ const NotificationPreferences = () => {
             color: '#64748b',
             fontSize: '0.95rem',
           }}>
-            Choose which activity updates you want to receive.
+            {isAdmin
+              ? 'Choose whether you want to receive ticket status change updates.'
+              : 'Choose which activity updates you want to receive.'}
           </p>
         </div>
 
@@ -214,7 +221,7 @@ const NotificationPreferences = () => {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(rowLabelMap).map(([key, label]) => (
+              {visiblePreferenceEntries.map(([key, label]) => (
                 <tr key={key} style={{ borderTop: '1px solid #f1f5f9' }}>
                   <td style={{
                     padding: '16px 18px',

@@ -30,6 +30,13 @@ const getTimeAgo = (value) => {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 };
 
+const getNotificationKind = (type) => {
+  if (type?.includes('BOOKING')) return 'BOOKING';
+  if (type?.includes('TICKET')) return 'TICKET';
+  if (type === 'NEW_COMMENT') return 'COMMENT';
+  return 'GENERAL';
+};
+
 const NotificationBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -99,12 +106,17 @@ const NotificationBell = () => {
     if (!item.read) {
       handleMarkAsRead(item.id);
     }
-    
-    if (item.referenceId) {
-      // Navigate based on type if needed, but for now assuming tickets
-      navigate(`/tickets/${item.referenceId}`);
+
+    const kind = getNotificationKind(item.type);
+    if (kind === 'BOOKING') {
+      navigate('/bookings');
       setOpen(false);
+      return;
     }
+
+    // Ticket/comment IDs may reference deleted items, so route via Notifications page.
+    navigate('/notifications');
+    setOpen(false);
   };
 
   const handleMarkAllAsRead = async () => {
@@ -125,15 +137,22 @@ const NotificationBell = () => {
   };
 
   const handleDelete = async (id) => {
+    const deletingId = id;
+    if (!deletingId) {
+      return;
+    }
+
+    setError('');
+    const target = notifications.find((item) => item.id === deletingId);
+    setNotifications((prev) => prev.filter((item) => item.id !== deletingId));
+    if (target && !target.read) {
+      setUnreadCount((prev) => Math.max(prev - 1, 0));
+    }
+
     try {
-      const target = notifications.find((item) => item.id === id);
-      await api.delete(`/notifications/${id}`);
-      setNotifications((prev) => prev.filter((item) => item.id !== id));
-      if (target && !target.read) {
-        setUnreadCount((prev) => Math.max(prev - 1, 0));
-      }
+      await api.delete(`/notifications/${deletingId}`);
     } catch (requestError) {
-      setError('Could not delete notification');
+      // Best-effort delete: keep UI clean even if backend item is already gone.
     }
   };
 
@@ -210,33 +229,21 @@ const NotificationBell = () => {
             </ul>
           )}
 
-          <div style={{
-            borderTop: '1px solid #f0f0f0',
-            padding: '8px 16px',
-            textAlign: 'center'
-          }}>
-            <div
+          <div className="notification__footer">
+            <button
+              type="button"
+              className="notification__footer-link"
               onClick={() => { navigate('/notifications'); setOpen(false); }}
-              style={{
-                borderTop: '1px solid #f0f0f0',
-                padding: '10px 16px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                fontSize: '13px',
-                color: '#2563eb',
-                fontWeight: '500'
-              }}
             >
               View all notifications →
-            </div>
-            {user?.role !== 'ADMIN' && (
-              <span
-                onClick={() => { navigate('/notifications/preferences'); setOpen(false); }}
-                style={{ fontSize: '12px', color: '#666', cursor: 'pointer' }}
-              >
-                ⚙ Notification Preferences
-              </span>
-            )}
+            </button>
+            <button
+              type="button"
+              className="notification__footer-subtle"
+              onClick={() => { navigate('/notifications/preferences'); setOpen(false); }}
+            >
+              {user?.role === 'ADMIN' ? '⚙ Ticket Notification Preference' : '⚙ Notification Preferences'}
+            </button>
           </div>
         </div>
       )}

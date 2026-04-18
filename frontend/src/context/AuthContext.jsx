@@ -34,7 +34,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (redirectTo = '/') => {
-    sessionStorage.setItem('postLoginRedirect', redirectTo || '/');
+    const safeRedirect =
+      typeof redirectTo === 'string' && redirectTo.startsWith('/')
+        ? redirectTo
+        : '/';
+
+    sessionStorage.setItem('postLoginRedirect', safeRedirect);
     window.location.href = 'http://localhost:8081/oauth2/authorization/google';
   };
 
