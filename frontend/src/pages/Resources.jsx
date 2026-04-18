@@ -1,57 +1,83 @@
-import React, { useEffect, useState } from "react";
-import API from "../api/api";
+import { Link } from 'react-router-dom';
+import ResourceCatalog from '../components/Resources/ResourceCatalog';
+import Footer from '../components/Footer';
+import './Resources.css';
+
+const featuredFacilities = [
+  {
+    name: 'Lecture Hall',
+    image: '/campus_lecture_hall.png',
+    caption: 'Bright lecture spaces for large sessions and presentations.',
+  },
+  {
+    name: 'Computer Lab',
+    image: '/campus_computer_lab.png',
+    caption: 'Modern workstations ready for practical sessions and labs.',
+  },
+  {
+    name: 'Group Study',
+    image: '/campus_group_study.png',
+    caption: 'Flexible collaboration spaces for project teams and clubs.',
+  },
+  {
+    name: 'Library',
+    image: '/campus_library.png',
+    caption: 'Quiet corners for focused learning and research.',
+  },
+];
+
+const stats = [
+  { value: '24+', label: 'Spaces' },
+  { value: '6', label: 'Types' },
+  { value: '100%', label: 'Visual' },
+];
 
 const Resources = () => {
-  const [resources, setResources] = useState([]);
-
-  const fetchResources = () => {
-    API.get("/resources")
-      .then((res) => setResources(res.data))
-      .catch((err) => console.log(err));
-  };
-
-  useEffect(() => {
-    fetchResources();
-  }, []);
-
-  const addResource = () => {
-    API.post("/resources", {
-      name: "Lab A",
-      type: "Room",
-      capacity: 50,
-      location: "Building A",
-      status: "ACTIVE",
-    }).then(() => fetchResources());
-  };
-
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '900px' }}>
-      <h1 style={{ marginTop: 0, fontSize: '1.85rem', fontWeight: 800, marginBottom: '12px' }}>🏫 Campus Resources</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontWeight: 500 }}>
-        Manage all campus facilities and properties from this central module.
-      </p>
+    <div className="resources-page">
+      <section className="facility-hero">
+        <div className="container facility-hero__layout">
+          <div className="facility-hero__copy">
+            <p className="section-label">Facilities Catalogue</p>
+            <h1>Browse campus spaces with visual previews, details, and booking-ready information.</h1>
+            <p>
+              Discover lecture halls, labs, meeting rooms, and equipment through image cards that show the key information students need at a glance.
+            </p>
 
-      <button className="premium-btn" onClick={addResource}>Add Sample Resource</button>
-
-      <div style={{ marginTop: '32px', display: 'grid', gap: '12px' }}>
-        {resources.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            No resources found in the database.
-          </div>
-        ) : (
-          resources.map((item) => (
-            <div key={item.id} className="glass-panel" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>{item.name}</strong>
-                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  {item.location} • {item.type}
-                </div>
-              </div>
-              <span className="status-chip" style={{ background: '#F1F5F9', color: '#475569' }}>{item.status}</span>
+            <div className="facility-hero__actions">
+              <Link to="/admin-login" className="btn-primary">Add a facility</Link>
+              <a href="#resources" className="btn-secondary">Explore facilities</a>
             </div>
-          ))
-        )}
-      </div>
+
+            <div className="facility-hero__stats">
+              {stats.map((stat) => (
+                <div key={stat.label} className="facility-hero__stat">
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="facility-hero__gallery">
+            {featuredFacilities.map((facility) => (
+              <article key={facility.name} className="facility-hero__card">
+                <img src={facility.image} alt={facility.name} />
+                <div>
+                  <h3>{facility.name}</h3>
+                  <p>{facility.caption}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <main className="container facilities-layout">
+        <ResourceCatalog />
+      </main>
+
+      <Footer />
     </div>
   );
 };

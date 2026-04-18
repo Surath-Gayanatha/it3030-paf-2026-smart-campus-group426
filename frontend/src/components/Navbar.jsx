@@ -8,8 +8,9 @@ const Navbar = () => {
   const { user, login, logout } = useAuth();
 
   const navLinks = useMemo(() => [
-    { label: 'Home', href: '#', active: true },
-    { label: 'Resources', href: '#resources' },
+    { label: 'Home', href: '/', active: true },
+    { label: 'Facilities', href: '/resources' },
+    { label: 'Add Facility', href: '/admin-login' },
     { label: 'Bookings', href: '#bookings' },
     { label: 'Tickets', href: '/tickets' },
     { label: 'Dashboard', href: '#dashboard' },
