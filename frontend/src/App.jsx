@@ -20,7 +20,7 @@ import FacilityDetail from './pages/FacilityDetail';
 const HomePage = () => {
   return (
     <>
-      <main>
+      <main className="home-page__main">
         <Hero />
         <QuickActions />
         <Features />
@@ -34,32 +34,34 @@ const HomePage = () => {
 function App() {
   return (
     <AuthProvider>
-      <div>
+      <div className="app-shell">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/facilities/:id" element={<FacilityDetail />} />
-          <Route path="/facilities/create" element={<AddFacility />} />
-          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-          <Route
-            path="/onboarding"
-            element={(
-              <ProtectedRoute>
-                <OnboardingPage />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/admin"
-            element={(
-              <AdminRoute>
-                <AdminPanel />
-              </AdminRoute>
-            )}
-          />
-        </Routes>
+        <div className="app-shell__content">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/facilities/:id" element={<FacilityDetail />} />
+            <Route path="/facilities/create" element={<AddFacility />} />
+            <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+            <Route
+              path="/onboarding"
+              element={(
+                <ProtectedRoute>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              )}
+            />
+            <Route
+              path="/admin"
+              element={(
+                <AdminRoute>
+                  <AdminPanel />
+                </AdminRoute>
+              )}
+            />
+          </Routes>
+        </div>
       </div>
     </AuthProvider>
   );
