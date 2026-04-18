@@ -10,7 +10,6 @@ const Navbar = () => {
   const navLinks = useMemo(() => [
     { label: 'Home', href: '/', active: true },
     { label: 'Facilities', href: '/resources' },
-    { label: 'Add Facility', href: '/admin-login' },
     { label: 'Bookings', href: '#bookings' },
     { label: 'Tickets', href: '#dashboard' },
     { label: 'Dashboard', href: '#dashboard' },
