@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getBookings, updateBookingStatus } from '../../api/booking.api';
+import { getBookings, updateBookingStatus, deleteBooking } from '../../api/booking.api';
 import api from '../../utils/axiosConfig';
 import './Bookings.css';
 
@@ -51,6 +51,18 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
         }
     };
 
+    const handleDelete = async (booking) => {
+        if (!window.confirm("Are you absolutely sure you want to DELETE this booking? This cannot be undone.")) return;
+        try {
+            await deleteBooking(booking.id);
+            fetchBookings();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error deleting booking');
+        }
+    };
+
+    const isFuture = (dateStr) => new Date(dateStr) > new Date();
+
     if (loading) return <div>Loading bookings...</div>;
     if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
@@ -84,15 +96,21 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
                         </div>
                         
                         <div className="booking-actions">
-                            {/* ANY user can Edit/Cancel their OWN pending bookings, even admins! */}
-                            {booking.status === 'PENDING' && currentUser?.id === booking.userId && (
+                            {/* ANY user can Edit/Cancel their OWN pending bookings IF it's in the future */}
+                            {booking.status === 'PENDING' && currentUser?.id === booking.userId && isFuture(booking.startTime) && (
                                 <button className="btn-primary" onClick={() => onEdit(booking)}>Edit</button>
                             )}
-                            {(booking.status === 'PENDING' || booking.status === 'APPROVED') && currentUser?.id === booking.userId && (
-                                <button className="btn-ghost" style={{color: 'red', borderColor: 'red'}} onClick={() => handleCancel(booking)}>Cancel</button>
+                            {(booking.status === 'PENDING' || booking.status === 'APPROVED') && currentUser?.id === booking.userId && isFuture(booking.startTime) && (
+                                <button className="btn-ghost" style={{color: '#f59e0b', borderColor: '#f59e0b'}} onClick={() => handleCancel(booking)}>Cancel</button>
                             )}
+                            
+                            {/* Deleting completely - Only for Terminal statuses to keep DB clean */}
+                            {(booking.status === 'REJECTED' || booking.status === 'CANCELLED') && (currentUser?.id === booking.userId || isAdmin) && (
+                                <button className="btn-ghost" style={{color: 'white', backgroundColor: '#ef4444', borderColor: '#ef4444'}} onClick={() => handleDelete(booking)}>Delete</button>
+                            )}
+
                             {/* Admins can review PENDING bookings from OTHER users */}
-                            {booking.status === 'PENDING' && isAdmin && currentUser?.id !== booking.userId && (
+                            {booking.status === 'PENDING' && isAdmin && currentUser?.id !== booking.userId && isFuture(booking.startTime) && (
                                 <button className="btn-primary" onClick={() => onReview(booking)}>Review</button>
                             )}
                         </div>

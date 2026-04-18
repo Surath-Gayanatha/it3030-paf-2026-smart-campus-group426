@@ -40,6 +40,9 @@ public class BookingService {
         if (durationMinutes < 15) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking must be at least 15 minutes long");
         }
+        if (durationMinutes > 720) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking cannot exceed maximum limit of 12 hours");
+        }
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -97,6 +100,9 @@ public class BookingService {
         long durationMinutes = ChronoUnit.MINUTES.between(requestDTO.getStartTime(), requestDTO.getEndTime());
         if (durationMinutes < 15) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking must be at least 15 minutes long");
+        }
+        if (durationMinutes > 720) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking cannot exceed maximum limit of 12 hours");
         }
 
         User user = userRepository.findByEmail(userEmail)
