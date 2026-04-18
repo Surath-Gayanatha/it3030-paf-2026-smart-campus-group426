@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 "/",
                                 "/error",
                                 "/api/auth/**",
+                                "/api/resources/**",
                                 "/oauth2/**",
                                 "/login/**"
                         ).permitAll()
