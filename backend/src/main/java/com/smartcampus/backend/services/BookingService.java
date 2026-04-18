@@ -4,6 +4,7 @@ import com.smartcampus.backend.dto.BookingRequestDTO;
 import com.smartcampus.backend.dto.BookingStatusUpdateDTO;
 import com.smartcampus.backend.model.Booking;
 import com.smartcampus.backend.model.BookingStatus;
+import com.smartcampus.backend.model.NotificationType;
 import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.model.User;
 import com.smartcampus.backend.repository.BookingRepository;
@@ -25,6 +26,9 @@ public class BookingService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public Booking createBooking(BookingRequestDTO requestDTO, String userEmail) {
         // Validate dates
@@ -61,7 +65,16 @@ public class BookingService {
                 .status(BookingStatus.PENDING)
                 .build();
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        notifyAllAdmins(
+            "New Booking Request",
+            "A new booking request has been submitted for review.",
+            NotificationType.NEW_BOOKING_REQUEST,
+            savedBooking.getId()
+        );
+
+        return savedBooking;
     }
 
     public List<Booking> getAllBookings(String userEmail) {
@@ -158,6 +171,8 @@ public class BookingService {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
 
+        BookingStatus previousStatus = booking.getStatus();
+
         if (user.getRole() == Role.ADMIN) {
             // Admins can approve or reject
             if (dto.getStatus() == BookingStatus.APPROVED || dto.getStatus() == BookingStatus.REJECTED) {
@@ -187,7 +202,48 @@ public class BookingService {
             }
         }
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        if (savedBooking.getStatus() == BookingStatus.APPROVED) {
+            notificationService.createNotification(
+                    savedBooking.getUserId(),
+                    "Booking Approved \u2713",
+                    "Your booking request has been approved successfully.",
+                    NotificationType.BOOKING_APPROVED,
+                    savedBooking.getId()
+            );
+        }
+
+        if (savedBooking.getStatus() == BookingStatus.REJECTED) {
+            notificationService.createNotification(
+                    savedBooking.getUserId(),
+                    "Booking Rejected",
+                    "Your booking request was rejected. Reason: " + dto.getAdminReason(),
+                    NotificationType.BOOKING_REJECTED,
+                    savedBooking.getId()
+            );
+        }
+
+        if (savedBooking.getStatus() == BookingStatus.CANCELLED) {
+            notificationService.createNotification(
+                    savedBooking.getUserId(),
+                    "Booking Cancelled",
+                    "Your booking has been cancelled.",
+                    NotificationType.BOOKING_CANCELLED,
+                    savedBooking.getId()
+            );
+
+            if (user.getRole() != Role.ADMIN && previousStatus == BookingStatus.APPROVED) {
+                notifyAllAdmins(
+                        "Booking Cancelled by User",
+                        "A user has cancelled their approved booking.",
+                        NotificationType.BOOKING_CANCELLED_ADMIN,
+                        savedBooking.getId()
+                );
+            }
+        }
+
+        return savedBooking;
     }
 
     public void deleteBooking(String id, String userEmail) {
@@ -224,6 +280,13 @@ public class BookingService {
             if (excludeBookingId == null || !b.getId().equals(excludeBookingId)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "The requested resource is already booked for the selected time range.");
             }
+        }
+    }
+
+    private void notifyAllAdmins(String title, String message, NotificationType type, String referenceId) {
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.createNotification(admin.getId(), title, message, type, referenceId);
         }
     }
 }

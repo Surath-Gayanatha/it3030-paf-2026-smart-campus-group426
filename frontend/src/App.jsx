@@ -2,26 +2,28 @@ import './App.css';
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import AdminRoute from './components/AdminRoute';
 import Hero from './components/Hero';
 import QuickActions from './components/QuickActions';
 import Features from './components/Features';
 import Stats from './components/Stats';
 import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
-import TicketCreate from './pages/TicketCreate';
-import TicketList from './pages/TicketList';
-import TicketDetail from './pages/TicketDetail';
-import AdminView from './pages/AdminView';
 import AdminPanel from './pages/AdminPanel';
 import BookingsPage from './pages/BookingsPage';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import TicketList from './pages/TicketList';
+import TicketCreate from './pages/TicketCreate';
+import TicketDetail from './pages/TicketDetail';
+import AdminView from './pages/AdminView';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminRoute from './components/AdminRoute';
 import AdminLogin from './pages/AdminLogin';
 import Resources from './pages/Resources';
 import AddFacility from './pages/AddFacility';
 import FacilityDetail from './pages/FacilityDetail';
+import NotificationPreferences from './pages/NotificationPreferences';
+import NotificationsPage from './pages/NotificationsPage';
 
 const HomePage = () => {
   return (
@@ -69,7 +71,7 @@ function App() {
             <Route 
               path="/tickets/create" 
               element={
-                <ProtectedRoute allowedRoles={['LECTURER', 'STUDENT']}>
+                <ProtectedRoute allowedRoles={['LECTURER', 'USER', 'ADMIN']}>
                   <TicketCreate />
                 </ProtectedRoute>
               } 
@@ -89,6 +91,22 @@ function App() {
                   <TicketDetail />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/notifications/preferences"
+              element={(
+                <ProtectedRoute allowedRoles={['LECTURER', 'USER', 'TECHNICIAN', 'ADMIN']}>
+                  <NotificationPreferences />
+                </ProtectedRoute>
+              )}
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/admin-ticketing" 
