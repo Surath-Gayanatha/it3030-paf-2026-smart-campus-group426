@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -47,4 +48,14 @@ public class Booking {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    // Transient fields to securely pass user details back to the Frontend (Not saved in DB)
+    @Transient
+    private String requesterName;
+
+    @Transient
+    private String requesterEmail;
+
+    @Transient
+    private String requesterRole;
 }

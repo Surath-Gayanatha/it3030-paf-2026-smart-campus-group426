@@ -119,6 +119,14 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
                         </span>
                         <div className="booking-info">
                             <h3>Resource: {resources[booking.resourceId] || booking.resourceId}</h3>
+                            
+                            {isAdmin && booking.requesterName && (
+                                <div style={{ marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: '#f3f4f6', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
+                                    <p style={{ margin: '0 0 0.25rem 0' }}><strong>Requester:</strong> {booking.requesterName} <span style={{fontSize: '0.8rem', color: '#6b7280'}}>({booking.requesterRole})</span></p>
+                                    <p style={{ margin: '0', fontSize: '0.85rem' }}><strong>Email:</strong> {booking.requesterEmail}</p>
+                                </div>
+                            )}
+
                             <p><strong>Purpose:</strong> {booking.purpose}</p>
                             <p><strong>From:</strong> {formatDate(booking.startTime)}</p>
                             <p><strong>To:</strong> {formatDate(booking.endTime)}</p>

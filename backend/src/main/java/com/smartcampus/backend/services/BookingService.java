@@ -68,11 +68,27 @@ public class BookingService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+        List<Booking> bookings;
         if (user.getRole() == Role.ADMIN) {
-            return bookingRepository.findAll();
+            bookings = bookingRepository.findAll();
         } else {
-            return bookingRepository.findByUserId(user.getId());
+            bookings = bookingRepository.findByUserId(user.getId());
         }
+
+        // Safely map User data directly to the transient fields for ADMIN views
+        if (user.getRole() == Role.ADMIN) {
+            java.util.Map<String, User> userCache = new java.util.HashMap<>();
+            for (Booking b : bookings) {
+                User reqUser = userCache.computeIfAbsent(b.getUserId(), id -> userRepository.findById(id).orElse(null));
+                if (reqUser != null) {
+                    b.setRequesterName(reqUser.getName());
+                    b.setRequesterEmail(reqUser.getEmail());
+                    b.setRequesterRole(reqUser.getRole() != null ? reqUser.getRole().name() : "USER");
+                }
+            }
+        }
+
+        return bookings;
     }
 
     public Booking getBookingById(String id, String userEmail) {
