@@ -95,7 +95,7 @@ function App() {
             <Route
               path="/notifications/preferences"
               element={(
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['LECTURER', 'USER', 'TECHNICIAN']}>
                   <NotificationPreferences />
                 </ProtectedRoute>
               )}

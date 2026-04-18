@@ -229,12 +229,14 @@ const NotificationBell = () => {
             >
               View all notifications →
             </div>
-            <span
-              onClick={() => { navigate('/notifications/preferences'); setOpen(false); }}
-              style={{ fontSize: '12px', color: '#666', cursor: 'pointer' }}
-            >
-              ⚙ Notification Preferences
-            </span>
+            {user?.role !== 'ADMIN' && (
+              <span
+                onClick={() => { navigate('/notifications/preferences'); setOpen(false); }}
+                style={{ fontSize: '12px', color: '#666', cursor: 'pointer' }}
+              >
+                ⚙ Notification Preferences
+              </span>
+            )}
           </div>
         </div>
       )}
