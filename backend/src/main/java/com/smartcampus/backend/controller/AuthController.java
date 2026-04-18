@@ -2,6 +2,7 @@ package com.smartcampus.backend.controller;
 
 import com.smartcampus.backend.dto.response.UserResponse;
 import com.smartcampus.backend.model.Role;
+import com.smartcampus.backend.model.TechCategory;
 import com.smartcampus.backend.model.User;
 import com.smartcampus.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,22 @@ public class AuthController {
         return ResponseEntity.ok(UserResponse.fromUser(user));
     }
 
+    // Submit role request from onboarding - USER side
+    @PostMapping("/me/role-request")
+    public ResponseEntity<UserResponse> submitRoleRequest(
+            @RequestParam Role role,
+            @RequestParam(required = false) TechCategory techCategory) {
+        User updatedUser = userService.submitRoleRequest(role, techCategory);
+        return ResponseEntity.ok(UserResponse.fromUser(updatedUser));
+    }
+
+    // Complete onboarding without role request
+    @PostMapping("/me/onboarding/complete")
+    public ResponseEntity<UserResponse> completeOnboarding() {
+        User updatedUser = userService.completeOnboarding();
+        return ResponseEntity.ok(UserResponse.fromUser(updatedUser));
+    }
+
     // Logout - frontend just deletes the token
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
@@ -50,8 +67,9 @@ public class AuthController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUserRole(
             @PathVariable String id,
-            @RequestParam Role role) {
-        User updatedUser = userService.updateUserRole(id, role);
+            @RequestParam Role role,
+            @RequestParam(required = false) TechCategory techCategory) {
+        User updatedUser = userService.updateUserRole(id, role, techCategory);
         return ResponseEntity.ok(UserResponse.fromUser(updatedUser));
     }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 
 const slides = [
   {
@@ -114,7 +115,7 @@ const Hero = () => {
             </p>
 
             <div className="hero__actions">
-              <a href="#bookings" className="btn-primary" id="hero-book-btn">
+              <Link to="/resources" className="btn-primary" id="hero-book-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                   <line x1="16" y1="2" x2="16" y2="6" />
@@ -122,7 +123,7 @@ const Hero = () => {
                   <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
                 Book a Resource
-              </a>
+              </Link>
               <a href="#dashboard" className="btn-secondary" id="hero-report-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />

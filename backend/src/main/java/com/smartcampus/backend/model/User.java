@@ -32,6 +32,20 @@ public class User {
     @Builder.Default
     private Role role = Role.USER;
 
+    private Role requestedRole;
+
+    @Builder.Default
+    private RoleRequestStatus roleRequestStatus = RoleRequestStatus.NONE;
+
+    @Builder.Default
+    private TechCategory techCategory = TechCategory.NONE;
+
+    @Builder.Default
+    private TechCategory requestedTechCategory = TechCategory.NONE;
+
+    @Builder.Default
+    private boolean onboardingCompleted = false;
+
     @Builder.Default
     private String provider = "google";
 
