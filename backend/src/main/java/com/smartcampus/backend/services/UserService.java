@@ -40,6 +40,10 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public List<User> getUsersByRole(Role role) {
+        return userRepository.findByRole(role);
+    }
+
     // Update user role - admin only
     public User updateUserRole(String userId, Role role, TechCategory techCategory) {
         User user = userRepository.findById(userId)
