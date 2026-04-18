@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../utils/axiosConfig';
+import { useAuth } from '../../context/AuthContext';
 
 const slugify = (value = '') => value
   .toLowerCase()
@@ -23,11 +25,28 @@ const getStatusMeta = (status) => {
 
 const ResourceCard = ({ resource }) => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const resourceClass = slugify(resource.name) || 'item';
   const statusMeta = getStatusMeta(resource.status);
   const statusLabel = statusMeta.label;
   const statusClass = statusMeta.className;
   const availabilityWindows = resource.availabilityWindows || [];
+  const isAdmin = !loading && user?.role === 'ADMIN';
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(`Delete ${resource.name}? This cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.delete(`/resources/${resource.id}`);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      window.alert('Unable to delete this facility right now.');
+    }
+  };
 
   return (
     <div className={`resource-card resource-card--${resourceClass}`}>
@@ -67,13 +86,36 @@ const ResourceCard = ({ resource }) => {
             </div>
           </div>
         )}
-        <div className="resource-card__footer">
-          <button 
-            className="btn btn--primary btn--sm"
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: 'auto', flexWrap: 'wrap' }}>
+          <button
+            className="btn-primary"
+            style={{ flex: 1, minWidth: '140px', justifyContent: 'center' }}
             onClick={() => navigate(`/facilities/${resource.id}`)}
           >
             View facility
           </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              style={{
+                flex: 1,
+                minWidth: '140px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '12px 28px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                backgroundColor: '#dc2626',
+                color: '#fff',
+                boxShadow: 'var(--shadow-xs)',
+              }}
+            >
+              Delete facility
+            </button>
+          )}
         </div>
       </div>
     </div>
