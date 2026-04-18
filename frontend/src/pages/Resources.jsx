@@ -34,12 +34,14 @@ const stats = [
 
 const Resources = () => {
   return (
-    <div className="resources-page">
+    <div className="resources-page resources-page--showcase">
       <section className="facility-hero">
+        <div className="facility-hero__glow facility-hero__glow--left" aria-hidden="true" />
+        <div className="facility-hero__glow facility-hero__glow--right" aria-hidden="true" />
         <div className="container facility-hero__layout">
           <div className="facility-hero__copy">
             <p className="section-label">Facilities Catalogue</p>
-            <h1>Browse campus spaces with visual previews, details, and booking-ready information.</h1>
+            <h1>Explore signature campus spaces designed for classes, collaboration, and creative work.</h1>
             <p>
               Discover lecture halls, labs, meeting rooms, and equipment through image cards that show the key information students need at a glance.
             </p>
@@ -69,6 +71,19 @@ const Resources = () => {
                 </div>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="facility-ticker" aria-label="Facility highlights">
+        <div className="container">
+          <div className="facility-ticker__track">
+            <span>Lecture Theatres</span>
+            <span>Innovation Labs</span>
+            <span>Quiet Study Pods</span>
+            <span>Meeting Suites</span>
+            <span>Media Equipment</span>
+            <span>Library Zones</span>
           </div>
         </div>
       </section>

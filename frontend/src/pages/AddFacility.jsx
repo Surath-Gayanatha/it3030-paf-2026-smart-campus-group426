@@ -1,5 +1,4 @@
 import { Link, Navigate } from 'react-router-dom';
-import Footer from '../components/Footer';
 import ResourceForm from '../components/Resources/ResourceForm';
 import { useAuth } from '../context/AuthContext';
 import './Resources.css';
@@ -50,8 +49,6 @@ const AddFacility = () => {
       <main className="container facility-create-layout">
         <ResourceForm />
       </main>
-
-      <Footer />
     </div>
   );
 };
