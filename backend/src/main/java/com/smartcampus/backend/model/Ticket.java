@@ -35,6 +35,7 @@ public class Ticket {
     private TicketStatus status = TicketStatus.OPEN;
 
     private String assignedTechnician;
+    private String assignedTechnicianId;
     private String resolutionNotes;
     private String rejectionReason;
 

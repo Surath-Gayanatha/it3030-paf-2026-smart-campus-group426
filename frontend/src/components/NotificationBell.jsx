@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
@@ -31,6 +32,7 @@ const getTimeAgo = (value) => {
 
 const NotificationBell = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -90,6 +92,18 @@ const NotificationBell = () => {
       setUnreadCount((prev) => Math.max(prev - 1, 0));
     } catch (requestError) {
       setError('Could not mark notification as read');
+    }
+  };
+
+  const handleNotificationClick = async (item) => {
+    if (!item.read) {
+      handleMarkAsRead(item.id);
+    }
+    
+    if (item.referenceId) {
+      // Navigate based on type if needed, but for now assuming tickets
+      navigate(`/tickets/${item.referenceId}`);
+      setOpen(false);
     }
   };
 
@@ -170,7 +184,7 @@ const NotificationBell = () => {
                   <button
                     type="button"
                     className="notification__content"
-                    onClick={() => handleMarkAsRead(item.id)}
+                    onClick={() => handleNotificationClick(item)}
                   >
                     <p className="notification__title">{item.title}</p>
                     <p className="notification__message">{item.message}</p>

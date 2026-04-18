@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class TicketStatusRequest {
     private TicketStatus status;
     private String assignedTechnician;
+    private String assignedTechnicianId;
     private String resolutionNotes;
     private String rejectionReason;
 }

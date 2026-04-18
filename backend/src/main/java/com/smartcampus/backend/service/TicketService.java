@@ -6,7 +6,12 @@ import com.smartcampus.backend.dto.TicketStatusRequest;
 import com.smartcampus.backend.model.Ticket;
 import com.smartcampus.backend.model.TicketPriority;
 import com.smartcampus.backend.model.TicketStatus;
+import com.smartcampus.backend.model.NotificationType;
+import com.smartcampus.backend.model.User;
+import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.repository.TicketRepository;
+import com.smartcampus.backend.services.NotificationService;
+import com.smartcampus.backend.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +28,8 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final CloudinaryService cloudinaryService;
+    private final NotificationService notificationService;
+    private final UserService userService;
 
     // Helper: get current username safely (defaults to 'anonymous' when security is open)
     private String getCurrentUser() {
@@ -90,6 +97,13 @@ public class TicketService {
         return tickets.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
+    // Technician: only tickets assigned to them
+    public List<TicketResponse> getAssignedTickets() {
+        User currentUser = userService.getCurrentUser();
+        List<Ticket> tickets = ticketRepository.findByAssignedTechnicianId(currentUser.getId());
+        return tickets.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
     // ── UPLOAD IMAGES ─────────────────────────────────────────────────────────
 
     public TicketResponse uploadImages(String id, List<MultipartFile> files) {
@@ -121,6 +135,8 @@ public class TicketService {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
 
+        TicketStatus oldStatus = ticket.getStatus();
+
         if (request.getStatus() != null) {
             ticket.setStatus(request.getStatus());
         }
@@ -129,12 +145,56 @@ public class TicketService {
             ticket.setAssignedTechnician(request.getAssignedTechnician());
         }
         
+        if (request.getAssignedTechnicianId() != null && !request.getAssignedTechnicianId().equals(ticket.getAssignedTechnicianId())) {
+            ticket.setAssignedTechnicianId(request.getAssignedTechnicianId());
+            
+            // Trigger Notification
+            notificationService.createNotification(
+                    request.getAssignedTechnicianId(),
+                    "Ticket Assigned",
+                    "You have been assigned to handle maintenance ticket #" + ticket.getId().substring(Math.max(0, ticket.getId().length() - 5)),
+                    NotificationType.TICKET_STATUS_CHANGED,
+                    ticket.getId()
+            );
+        }
+        
         if (request.getResolutionNotes() != null) {
             ticket.setResolutionNotes(request.getResolutionNotes());
         }
         
         if (request.getRejectionReason() != null) {
             ticket.setRejectionReason(request.getRejectionReason());
+        }
+
+        // --- Post-update Notifications ---
+        if (ticket.getStatus() != oldStatus) {
+            String shortId = ticket.getId().substring(Math.max(0, ticket.getId().length() - 5));
+            String statusMsg = "Ticket #" + shortId + " status updated to " + ticket.getStatus();
+            
+            // 1. Notify Creator (createdBy is their email)
+            userService.findByEmail(ticket.getCreatedBy()).ifPresent(creator -> {
+                notificationService.createNotification(
+                        creator.getId(),
+                        "Ticket Update",
+                        statusMsg,
+                        NotificationType.TICKET_STATUS_CHANGED,
+                        ticket.getId()
+                );
+            });
+
+            // 2. Notify Admins
+            List<User> admins = userService.getUsersByRole(Role.ADMIN);
+            for (User admin : admins) {
+                // Don't notify the current user if they are an admin doing the update
+                // (Optional refinement, but simple is better for now)
+                notificationService.createNotification(
+                        admin.getId(),
+                        "Admin: Ticket Progress",
+                        statusMsg,
+                        NotificationType.TICKET_STATUS_CHANGED,
+                        ticket.getId()
+                );
+            }
         }
 
         return mapToResponse(ticketRepository.save(ticket));
@@ -154,6 +214,7 @@ public class TicketService {
                 .contactEmail(ticket.getContactEmail())
                 .contactPhone(ticket.getContactPhone())
                 .assignedTechnician(ticket.getAssignedTechnician())
+                .assignedTechnicianId(ticket.getAssignedTechnicianId())
                 .resolutionNotes(ticket.getResolutionNotes())
                 .rejectionReason(ticket.getRejectionReason())
                 .imageUrls(ticket.getImageUrls())

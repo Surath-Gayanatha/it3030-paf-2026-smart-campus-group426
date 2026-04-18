@@ -10,14 +10,14 @@ import { useAuth } from '../context/AuthContext';
 
 /* ─── Design Tokens ──────────────────────────────────────────────────────── */
 const TOKEN = {
-  bg:        '#0B0F1A',
-  surface:   '#111827',
-  surfaceEl: '#1C2537',
-  border:    'rgba(255,255,255,0.07)',
-  borderHov: 'rgba(255,255,255,0.14)',
-  textPri:   '#F0F4FF',
-  textSec:   '#8896B3',
-  textMut:   '#4E5E7A',
+  bg:        '#F8FAFC',
+  surface:   '#FFFFFF',
+  surfaceEl: '#F1F5F9',
+  border:    'rgba(0,0,0,0.08)',
+  borderHov: 'rgba(0,0,0,0.12)',
+  textPri:   '#0F172A',
+  textSec:   '#475569',
+  textMut:   '#94A3B8',
 };
 
 /* ─── Status Config ──────────────────────────────────────────────────────── */
@@ -56,10 +56,7 @@ const timeSince = (iso) => {
   return `${Math.floor(h / 24)}d ago`;
 };
 
-const TECHNICIANS = [
-  'Alice Fernando','Bob Perera','Chamara Silva',
-  'Dilshan Jayawardena','Eranga Bandara','Fathima Rizvi',
-];
+
 
 const initials = (name) => name?.split(' ').map(n => n[0]).join('').slice(0,2) || '?';
 
@@ -67,50 +64,50 @@ const initials = (name) => name?.split(' ').map(n => n[0]).join('').slice(0,2) |
 const globalStyle = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-  .adm-root { font-family: 'Outfit', sans-serif; }
+  .adm-root { font-family: 'Outfit', sans-serif; background-color: #F8FAFC;}
   .adm-root * { box-sizing: border-box; }
 
   .adm-input {
     width: 100%;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: #FFFFFF;
+    border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
-    color: #F0F4FF;
+    color: #0F172A;
     font-family: 'Outfit', sans-serif;
     font-size: 0.9rem;
     padding: 10px 14px;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .adm-input::placeholder { color: #4E5E7A; }
+  .adm-input::placeholder { color: #94A3B8; }
   .adm-input:focus {
-    border-color: rgba(99,102,241,0.6);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    border-color: rgba(37,99,235,0.6);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
   }
 
   .adm-btn-ghost {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.06);
     border-radius: 8px;
-    color: #8896B3;
+    color: #475569;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-family: 'Outfit', sans-serif;
     font-size: 0.88rem;
-    font-weight: 500;
+    font-weight: 600;
     padding: 9px 16px;
     transition: all 0.18s;
   }
   .adm-btn-ghost:hover {
-    background: rgba(255,255,255,0.09);
-    border-color: rgba(255,255,255,0.18);
-    color: #F0F4FF;
+    background: rgba(0,0,0,0.06);
+    border-color: rgba(0,0,0,0.12);
+    color: #0F172A;
   }
 
   .adm-btn-primary {
-    background: linear-gradient(135deg,#6366F1,#818CF8);
+    background: linear-gradient(135deg,#1E3A8A,#2563EB);
     border: none;
     border-radius: 10px;
     color: #fff;
@@ -122,22 +119,22 @@ const globalStyle = `
     font-size: 0.9rem;
     font-weight: 600;
     padding: 11px 22px;
-    transition: opacity 0.18s, transform 0.15s;
-    box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+    transition: opacity 0.18s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.25);
   }
-  .adm-btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
-  .adm-btn-primary:active { transform: translateY(0); }
+  .adm-btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37,99,235,0.35); }
+  .adm-btn-primary:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(37,99,235,0.2); }
   .adm-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .adm-row-hover { transition: background 0.15s; }
-  .adm-row-hover:hover { background: rgba(255,255,255,0.03) !important; }
+  .adm-row-hover:hover { background: rgba(0,0,0,0.02) !important; }
 
   .adm-action-btn {
     align-items: center;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #F1F5F9;
+    border: 1px solid rgba(0,0,0,0.05);
     border-radius: 8px;
-    color: #8896B3;
+    color: #64748B;
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -157,7 +154,7 @@ const globalStyle = `
 
   .adm-scrollbar::-webkit-scrollbar { width: 5px; }
   .adm-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .adm-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+  .adm-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
 `;
 
 /* ─── StatusBadge ────────────────────────────────────────────────────────── */
@@ -235,7 +232,7 @@ const Overlay = ({ children, onClose }) => (
       overflowY:'auto', padding:'32px', position:'relative', width:'100%',
     }}>
       <button onClick={onClose} style={{
-        background:'rgba(255,255,255,0.06)', border:`1px solid ${TOKEN.border}`,
+        background:'rgba(0,0,0,0.06)', border:`1px solid ${TOKEN.border}`,
         borderRadius:'8px', color:TOKEN.textSec, cursor:'pointer', padding:'6px',
         position:'absolute', right:'16px', top:'16px', display:'flex',
         transition:'all 0.15s',
@@ -248,21 +245,24 @@ const Overlay = ({ children, onClose }) => (
 );
 
 /* ─── Assign Modal ───────────────────────────────────────────────────────── */
-const AssignModal = ({ ticket, onClose, onAssigned }) => {
-  const [selected, setSelected] = useState(ticket.assignedTechnician || '');
-  const [custom, setCustom]     = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState('');
+const AssignModal = ({ ticket, technicians, onClose, onAssigned }) => {
+  const [selectedName, setSelectedName] = useState(ticket.assignedTechnician || '');
+  const [selectedId, setSelectedId]     = useState(ticket.assignedTechnicianId || '');
+  const [custom, setCustom]             = useState('');
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState('');
 
-  const tech = custom.trim() || selected;
+  const techName = custom.trim() || selectedName;
+  const techId   = custom.trim() ? null : selectedId;
 
   const handleAssign = async () => {
-    if (!tech) { setError('Please select or enter a technician.'); return; }
+    if (!techName) { setError('Please select or enter a technician.'); return; }
     setLoading(true);
     try {
       await API.patch(`/tickets/${ticket.id}/status`, {
         status: ticket.status === 'OPEN' ? 'IN_PROGRESS' : ticket.status,
-        assignedTechnician: tech,
+        assignedTechnician: techName,
+        assignedTechnicianId: techId
       });
       onAssigned(); onClose();
     } catch (err) {
@@ -283,26 +283,26 @@ const AssignModal = ({ ticket, onClose, onAssigned }) => {
         Available Technicians
       </p>
       <div style={{ display:'flex', flexDirection:'column', gap:'6px', marginBottom:'20px' }}>
-        {TECHNICIANS.map((t, i) => {
-          const active = selected === t && !custom;
+        {technicians.map((t, i) => {
+          const active = selectedId === t.id && !custom;
           return (
-            <button key={t} onClick={() => { setSelected(t); setCustom(''); }} style={{
-              alignItems:'center', background: active ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)',
-              border:`1px solid ${active ? 'rgba(99,102,241,0.5)' : TOKEN.border}`,
-              borderRadius:'10px', color: active ? '#A5B4FC' : TOKEN.textSec, cursor:'pointer',
+            <button key={t.id} onClick={() => { setSelectedName(t.name); setSelectedId(t.id); setCustom(''); }} style={{
+              alignItems:'center', background: active ? 'rgba(37,99,235,0.08)' : 'rgba(0,0,0,0.02)',
+              border:`1px solid ${active ? 'rgba(37,99,235,0.4)' : TOKEN.border}`,
+              borderRadius:'10px', color: active ? '#1E3A8A' : TOKEN.textSec, cursor:'pointer',
               display:'flex', gap:'10px', fontFamily:'Outfit,sans-serif', fontSize:'0.88rem',
               fontWeight: active ? 700 : 500, padding:'11px 14px', textAlign:'left', transition:'all 0.15s',
             }}>
               <div style={{
-                alignItems:'center', background: active ? '#6366F1' : avatarColors[i % avatarColors.length] + '40',
+                alignItems:'center', background: active ? '#2563EB' : avatarColors[i % avatarColors.length] + '25',
                 borderRadius:'50%', color: active ? '#fff' : avatarColors[i % avatarColors.length],
                 display:'flex', flexShrink:0, fontSize:'0.72rem', fontWeight:800,
                 height:'32px', justifyContent:'center', width:'32px',
               }}>
-                {initials(t)}
+                {initials(t.name)}
               </div>
-              {t}
-              {active && <span style={{ marginLeft:'auto', background:'rgba(99,102,241,0.2)', border:'1px solid rgba(99,102,241,0.4)', borderRadius:'6px', color:'#818CF8', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px' }}>Selected</span>}
+              {t.name}
+              {active && <span style={{ marginLeft:'auto', background:'rgba(37,99,235,0.1)', border:'1px solid rgba(37,99,235,0.3)', borderRadius:'6px', color:'#2563EB', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px' }}>Selected</span>}
             </button>
           );
         })}
@@ -312,7 +312,7 @@ const AssignModal = ({ ticket, onClose, onAssigned }) => {
         Or enter custom name
       </p>
       <input className="adm-input" placeholder="Type technician name…" value={custom}
-        onChange={e => { setCustom(e.target.value); setSelected(''); }}
+        onChange={e => { setCustom(e.target.value); setSelectedName(''); setSelectedId(''); }}
         style={{ marginBottom:'16px' }} />
 
       {error && <p style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'8px', color:'#FCA5A5', fontSize:'0.83rem', margin:'0 0 12px', padding:'10px 14px' }}>⚠ {error}</p>}
@@ -386,7 +386,7 @@ const StatusModal = ({ ticket, onClose, onUpdated }) => {
           const active = newStatus === s;
           return (
             <button key={s} onClick={() => setNewStatus(s)} style={{
-              background: active ? meta.bg : 'rgba(255,255,255,0.03)',
+              background: active ? meta.bg : 'rgba(0,0,0,0.03)',
               border:`2px solid ${active ? meta.border : TOKEN.border}`,
               borderRadius:'10px', color: active ? meta.color : TOKEN.textSec,
               cursor:'pointer', fontFamily:'Outfit,sans-serif', fontSize:'0.88rem',
@@ -427,6 +427,7 @@ const AdminView = () => {
   const navigate = useNavigate();
 
   const [tickets, setTickets]           = useState([]);
+  const [technicians, setTechnicians]   = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
   const [search, setSearch]             = useState('');
@@ -449,9 +450,25 @@ const AdminView = () => {
     } finally { setLoading(false); }
   }, [statusFilter, priorityFilter]);
 
+  const fetchTechnicians = useCallback(async () => {
+    try {
+      const res = await API.get('/auth/users');
+      setTechnicians(res.data.filter(u => u.role === 'TECHNICIAN'));
+    } catch (err) {
+      console.error('Failed to load technicians', err);
+    }
+  }, []);
+
   useEffect(() => {
-    if (!authLoading) { user ? fetchTickets() : setError('You must be logged in.'); }
-  }, [authLoading, user, fetchTickets]);
+    if (!authLoading) { 
+      if (user) {
+        fetchTickets();
+        fetchTechnicians();
+      } else {
+        setError('You must be logged in.');
+      }
+    }
+  }, [authLoading, user, fetchTickets, fetchTechnicians]);
 
   const counts = {
     ALL:         tickets.length,
@@ -559,7 +576,7 @@ const AdminView = () => {
           </div>
 
           {/* Status Tabs */}
-          <div style={{ alignItems:'center', background:'rgba(255,255,255,0.03)', border:`1px solid ${TOKEN.border}`, borderRadius:'10px', display:'flex', flexWrap:'wrap', gap:'2px', padding:'3px' }}>
+          <div style={{ alignItems:'center', background:'rgba(0,0,0,0.03)', border:`1px solid ${TOKEN.border}`, borderRadius:'10px', display:'flex', flexWrap:'wrap', gap:'2px', padding:'3px' }}>
             {['ALL','OPEN','IN_PROGRESS','RESOLVED','REJECTED','CLOSED'].map(s => {
               const active = statusFilter === s;
               const meta = STATUS[s];
@@ -625,7 +642,7 @@ const AdminView = () => {
 
           {/* Header Row */}
           <div style={{
-            background:'rgba(255,255,255,0.03)', borderBottom:`1px solid ${TOKEN.border}`,
+            background:'rgba(0,0,0,0.03)', borderBottom:`1px solid ${TOKEN.border}`,
             display:'grid', gap:'0',
             gridTemplateColumns:'88px 1fr 120px 108px 152px 148px 140px',
             padding:'13px 20px',
@@ -651,7 +668,7 @@ const AdminView = () => {
                   display:'grid', gap:'0',
                   gridTemplateColumns:'88px 1fr 120px 108px 152px 148px 140px',
                   padding:'16px 20px',
-                  background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)',
+                  background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.012)',
                   transition:'background 0.15s',
                 }}
               >
@@ -682,7 +699,7 @@ const AdminView = () => {
                 {/* Category */}
                 <div>
                   <span style={{
-                    background:'rgba(255,255,255,0.06)', borderRadius:'7px', color:TOKEN.textSec,
+                    background:'rgba(0,0,0,0.06)', borderRadius:'7px', color:TOKEN.textSec,
                     fontSize:'0.75rem', fontWeight:600, padding:'4px 9px', whiteSpace:'nowrap',
                   }}>
                     {ticket.category?.replace('_',' ') || '—'}
@@ -725,7 +742,7 @@ const AdminView = () => {
                   <button title="View" className="adm-action-btn"
                     onClick={() => navigate(`/tickets/${ticket.id}`)}
                     onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(129,140,248,0.5)'; e.currentTarget.style.color='#818CF8'; e.currentTarget.style.background='rgba(99,102,241,0.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(255,255,255,0.04)'; }}>
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(0,0,0,0.04)'; }}>
                     <Eye size={14} />
                   </button>
 
@@ -733,7 +750,7 @@ const AdminView = () => {
                     <button title="Assign" className="adm-action-btn"
                       onClick={() => setAssignTarget(ticket)}
                       onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(16,185,129,0.5)'; e.currentTarget.style.color='#34D399'; e.currentTarget.style.background='rgba(16,185,129,0.1)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(255,255,255,0.04)'; }}>
+                      onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(0,0,0,0.04)'; }}>
                       <Wrench size={14} />
                     </button>
                   )}
@@ -742,7 +759,7 @@ const AdminView = () => {
                     <button title="Update status" className="adm-action-btn"
                       onClick={() => setStatusTarget(ticket)}
                       onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(245,158,11,0.5)'; e.currentTarget.style.color='#FBBF24'; e.currentTarget.style.background='rgba(245,158,11,0.1)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(255,255,255,0.04)'; }}>
+                      onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(0,0,0,0.04)'; }}>
                       <TrendingUp size={14} />
                     </button>
                   )}
@@ -753,7 +770,7 @@ const AdminView = () => {
 
           {/* Footer */}
           <div style={{
-            alignItems:'center', background:'rgba(255,255,255,0.02)', borderTop:`1px solid ${TOKEN.border}`,
+            alignItems:'center', background:'rgba(0,0,0,0.02)', borderTop:`1px solid ${TOKEN.border}`,
             display:'flex', justifyContent:'space-between', padding:'13px 20px',
           }}>
             <span style={{ color:TOKEN.textMut, fontSize:'0.8rem' }}>
@@ -768,7 +785,7 @@ const AdminView = () => {
         </div>
       )}
 
-      {assignTarget && <AssignModal ticket={assignTarget} onClose={() => setAssignTarget(null)} onAssigned={fetchTickets} />}
+      {assignTarget && <AssignModal ticket={assignTarget} technicians={technicians} onClose={() => setAssignTarget(null)} onAssigned={fetchTickets} />}
       {statusTarget && <StatusModal ticket={statusTarget} onClose={() => setStatusTarget(null)} onUpdated={fetchTickets} />}
     </div>
   );

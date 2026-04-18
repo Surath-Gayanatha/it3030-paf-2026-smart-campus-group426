@@ -67,6 +67,12 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getMyTickets(status));
     }
 
+    // GET /api/tickets/assigned — technician sees tickets assigned to them
+    @GetMapping("/assigned")
+    public ResponseEntity<List<TicketResponse>> getAssignedTickets() {
+        return ResponseEntity.ok(ticketService.getAssignedTickets());
+    }
+
     // PATCH /api/tickets/{id}/status — admin/technician updates status
     @PatchMapping("/{id}/status")
     public ResponseEntity<TicketResponse> updateTicketStatus(

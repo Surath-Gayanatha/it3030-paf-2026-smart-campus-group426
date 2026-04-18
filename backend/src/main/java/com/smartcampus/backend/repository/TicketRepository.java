@@ -20,6 +20,6 @@ public interface TicketRepository extends MongoRepository<Ticket, String> {
     List<Ticket> findByStatusAndPriority(TicketStatus status, TicketPriority priority);
 
     List<Ticket> findByAssignedTechnician(String technician);
-
+    List<Ticket> findByAssignedTechnicianId(String assignedTechnicianId);
     List<Ticket> findByCreatedByAndStatus(String createdBy, TicketStatus status);
 }

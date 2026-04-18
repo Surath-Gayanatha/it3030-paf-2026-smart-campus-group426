@@ -7,14 +7,25 @@ const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
   const { user, login, logout } = useAuth();
 
-  const navLinks = useMemo(() => [
-    { label: 'Home', href: '/', active: true },
-    { label: 'Facilities', href: '/resources' },
-    { label: 'Add Facility', href: '/admin-login' },
-    { label: 'Bookings', href: '#bookings' },
-    { label: 'Tickets', href: '/tickets' },
-    { label: 'Dashboard', href: '#dashboard' },
-  ], []);
+  const navLinks = useMemo(() => {
+    const isTicketsAdmin = user?.role === 'ADMIN';
+    const isTechnician = user?.role === 'TECHNICIAN';
+    
+    const links = [
+      { label: 'Home', href: '/', active: true },
+      { label: 'Facilities', href: '/resources' },
+      { label: 'Add Facility', href: '/admin-login' },
+      { label: 'Bookings', href: '#bookings' },
+      { label: 'Tickets', href: isTicketsAdmin ? '/admin-ticketing' : '/tickets' },
+    ];
+
+    if (isTechnician) {
+      links.push({ label: 'Tasks', href: '/tickets/assigned' });
+    }
+
+    links.push({ label: 'Dashboard', href: '#dashboard' });
+    return links;
+  }, [user?.role]);
 
   const initials = user?.name
     ? user.name

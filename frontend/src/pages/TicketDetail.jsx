@@ -12,7 +12,7 @@ const STATUS_STYLES = {
   CLOSED:      { color: '#374151', background: '#F3F4F6', border: '1px solid #E5E7EB' },
 };
 
-const TicketDetail = ({ isAdmin = false }) => {
+const TicketDetail = () => {
   const { id } = useParams();
   const { user, loading: authLoading } = useAuth();
 
@@ -100,6 +100,7 @@ const TicketDetail = ({ isAdmin = false }) => {
   );
 
   const statusStyle = STATUS_STYLES[ticket.status] || STATUS_STYLES.CLOSED;
+  const canManage = user?.role === 'ADMIN' || (user?.role === 'TECHNICIAN' && user?.id === ticket.assignedTechnicianId);
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 32px' }}>
@@ -140,7 +141,7 @@ const TicketDetail = ({ isAdmin = false }) => {
           </div>
         </div>
 
-        {isAdmin && (
+        {canManage && (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             {ticket.status === 'OPEN' && (
               <button disabled={isUpdating} onClick={() => { setStatusUpdateData({ status: 'IN_PROGRESS', notes: '' }); setShowStatusModal(true); }}

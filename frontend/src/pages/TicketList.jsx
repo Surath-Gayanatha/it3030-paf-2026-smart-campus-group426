@@ -136,7 +136,7 @@ const TicketCard = ({ ticket }) => {
   );
 };
 
-const TicketList = ({ isAdmin = false }) => {
+const TicketList = ({ isAdmin = false, isAssignedView = false }) => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -154,7 +154,8 @@ const TicketList = ({ isAdmin = false }) => {
     const fetchTickets = async () => {
       setLoading(true); setError(null);
       try {
-        const endpoint = isAdmin ? '/tickets' : '/tickets/my';
+        let endpoint = isAdmin ? '/tickets' : '/tickets/my';
+        if (isAssignedView) endpoint = '/tickets/assigned';
         const res = await API.get(endpoint);
         setTickets(res.data);
         setCounts({
@@ -213,17 +214,18 @@ const TicketList = ({ isAdmin = false }) => {
             textTransform: 'uppercase', marginBottom: '12px',
           }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6', display: 'inline-block' }} />
-            {isAdmin ? 'Admin Console' : 'Support Portal'}
+            {isAdmin ? 'Admin Console' : isAssignedView ? 'Technician Portal' : 'Support Portal'}
           </div>
           <h1 style={{
             margin: '0 0 8px 0', fontSize: '2.25rem', fontWeight: 700,
             color: '#1E3A8A', fontFamily: 'Poppins, sans-serif', letterSpacing: '-0.02em',
           }}>
-            {isAdmin ? 'Management Console' : 'My Support Tickets'}
+            {isAdmin ? 'Management Console' : isAssignedView ? 'My Assigned Tasks' : 'My Support Tickets'}
           </h1>
           <p style={{ color: '#6B7280', fontWeight: 500, fontSize: '1rem', margin: 0 }}>
             {isAdmin
               ? 'Oversee and resolve all campus maintenance requests.'
+              : isAssignedView ? 'Handle and resolve maintenance tickets assigned specifically to you.'
               : 'Track the status of your reported issues and requests.'}
           </p>
         </div>

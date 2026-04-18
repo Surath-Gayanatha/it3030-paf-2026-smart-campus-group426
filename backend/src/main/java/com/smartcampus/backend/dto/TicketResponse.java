@@ -23,6 +23,7 @@ public class TicketResponse {
     private String contactEmail;
     private String contactPhone;
     private String assignedTechnician;
+    private String assignedTechnicianId;
     private String resolutionNotes;
     private String rejectionReason;
     private List<String> imageUrls;
