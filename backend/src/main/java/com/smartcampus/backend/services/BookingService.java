@@ -40,12 +40,14 @@ public class BookingService {
         if (durationMinutes < 15) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking must be at least 15 minutes long");
         }
-        if (durationMinutes > 720) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking cannot exceed maximum limit of 12 hours");
-        }
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        long maxDuration = (user.getRole() == Role.LECTURER || user.getRole() == Role.ADMIN) ? 1440 : 720;
+        if (durationMinutes > maxDuration) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking cannot exceed maximum limit of " + (maxDuration / 60) + " hours for your role");
+        }
 
         checkForConflicts(requestDTO.getResourceId(), requestDTO.getStartTime(), requestDTO.getEndTime(), null);
 
@@ -101,12 +103,14 @@ public class BookingService {
         if (durationMinutes < 15) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking must be at least 15 minutes long");
         }
-        if (durationMinutes > 720) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking cannot exceed maximum limit of 12 hours");
-        }
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        long maxDuration = (user.getRole() == Role.LECTURER || user.getRole() == Role.ADMIN) ? 1440 : 720;
+        if (durationMinutes > maxDuration) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking cannot exceed maximum limit of " + (maxDuration / 60) + " hours for your role");
+        }
 
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
