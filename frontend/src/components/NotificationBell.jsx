@@ -209,6 +209,33 @@ const NotificationBell = () => {
               ))}
             </ul>
           )}
+
+          <div style={{
+            borderTop: '1px solid #f0f0f0',
+            padding: '8px 16px',
+            textAlign: 'center'
+          }}>
+            <div
+              onClick={() => { navigate('/notifications'); setOpen(false); }}
+              style={{
+                borderTop: '1px solid #f0f0f0',
+                padding: '10px 16px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                fontSize: '13px',
+                color: '#2563eb',
+                fontWeight: '500'
+              }}
+            >
+              View all notifications →
+            </div>
+            <span
+              onClick={() => { navigate('/notifications/preferences'); setOpen(false); }}
+              style={{ fontSize: '12px', color: '#666', cursor: 'pointer' }}
+            >
+              ⚙ Notification Preferences
+            </span>
+          </div>
         </div>
       )}
     </div>

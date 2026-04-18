@@ -22,6 +22,8 @@ import AdminLogin from './pages/AdminLogin';
 import Resources from './pages/Resources';
 import AddFacility from './pages/AddFacility';
 import FacilityDetail from './pages/FacilityDetail';
+import NotificationPreferences from './pages/NotificationPreferences';
+import NotificationsPage from './pages/NotificationsPage';
 
 const HomePage = () => {
   return (
@@ -89,6 +91,22 @@ function App() {
                   <TicketDetail />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/notifications/preferences"
+              element={(
+                <ProtectedRoute>
+                  <NotificationPreferences />
+                </ProtectedRoute>
+              )}
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/admin-ticketing" 
