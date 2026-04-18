@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { getBookings, updateBookingStatus, deleteBooking } from '../../api/booking.api';
 import api from '../../utils/axiosConfig';
+import jsPDF from 'jspdf';
+import { QRCodeCanvas } from 'qrcode.react';
+import LiveTimer from './LiveTimer';
 import './Bookings.css';
 
 const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) => {
@@ -63,6 +66,38 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
 
     const isFuture = (dateStr) => new Date(dateStr) > new Date();
 
+    const handleDownloadPass = (booking) => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(22);
+        doc.setTextColor(34, 197, 94);
+        doc.text("Official Booking Pass", 20, 20);
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text(`Booking ID: ${booking.id}`, 20, 35);
+        doc.text(`Resource: ${resources[booking.resourceId] || booking.resourceId}`, 20, 45);
+        doc.text(`Purpose: ${booking.purpose}`, 20, 55);
+        doc.text(`Attendees: ${booking.expectedAttendees || 'N/A'}`, 20, 65);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        doc.text(`From: ${new Date(booking.startTime).toLocaleString()}`, 20, 80);
+        doc.text(`To: ${new Date(booking.endTime).toLocaleString()}`, 20, 90);
+        
+        const canvas = document.getElementById(`qr-${booking.id}`);
+        if (canvas) {
+            const imgData = canvas.toDataURL('image/png');
+            doc.addImage(imgData, 'PNG', 140, 20, 50, 50);
+        }
+        
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text("Smart Campus Operations Hub - Secure Gateway Pass", 20, 280);
+
+        doc.save(`GatePass_${booking.id}.pdf`);
+    };
+
     if (loading) return <div>Loading bookings...</div>;
     if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
@@ -88,6 +123,15 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
                             <p><strong>From:</strong> {formatDate(booking.startTime)}</p>
                             <p><strong>To:</strong> {formatDate(booking.endTime)}</p>
                             <p><strong>Attendees:</strong> {booking.expectedAttendees || 'N/A'}</p>
+                            
+                            {booking.status === 'APPROVED' && (
+                                <LiveTimer startTime={booking.startTime} endTime={booking.endTime} />
+                            )}
+
+                            <div style={{ display: 'none' }}>
+                                <QRCodeCanvas id={`qr-${booking.id}`} value={`SECURE-PASS:${booking.id}`} size={256} />
+                            </div>
+
                             {booking.adminReason && (
                                 <p style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.5rem' }}>
                                     <strong>Admin Reason:</strong> {booking.adminReason}
@@ -104,6 +148,10 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
                                 <button className="btn-ghost" style={{color: '#f59e0b', borderColor: '#f59e0b'}} onClick={() => handleCancel(booking)}>Cancel</button>
                             )}
                             
+                            {booking.status === 'APPROVED' && (
+                                <button className="btn-primary" style={{backgroundColor: '#10b981', borderColor: '#10b981'}} onClick={() => handleDownloadPass(booking)}>Download Pass</button>
+                            )}
+
                             {/* Deleting completely - Only for Terminal statuses to keep DB clean */}
                             {(booking.status === 'REJECTED' || booking.status === 'CANCELLED') && (currentUser?.id === booking.userId || isAdmin) && (
                                 <button className="btn-ghost" style={{color: 'white', backgroundColor: '#ef4444', borderColor: '#ef4444'}} onClick={() => handleDelete(booking)}>Delete</button>
