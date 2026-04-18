@@ -10,6 +10,7 @@ import Stats from './components/Stats';
 import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
+import BookingsPage from './pages/BookingsPage';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogin from './pages/AdminLogin';
@@ -39,6 +40,14 @@ function App() {
         <div className="app-shell__content">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route 
+              path="/bookings" 
+              element={
+                <ProtectedRoute>
+                  <BookingsPage />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/resources" element={<Resources />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/facilities/:id" element={<FacilityDetail />} />

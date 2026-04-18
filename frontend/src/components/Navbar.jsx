@@ -10,10 +10,9 @@ const Navbar = () => {
   const navLinks = useMemo(() => [
     { label: 'Home', href: '/', active: true },
     { label: 'Facilities', href: '/resources' },
-    { label: 'Add Facility', href: '/admin-login' },
-    { label: 'Bookings', href: '#bookings' },
-    { label: 'Tickets', href: '#dashboard' },
-    { label: 'Dashboard', href: '#dashboard' },
+    { label: 'Add Facility', href: '/facilities/create' },
+    { label: 'Bookings', href: '/bookings' },
+    { label: 'Admin Panel', href: '/admin' },
   ], []);
 
   const initials = user?.name
@@ -46,15 +45,15 @@ const Navbar = () => {
         <ul className="navbar__nav" role="menubar">
           {navLinks.map((link) => (
             <li key={link.label} role="none">
-              <a
-                href={link.href}
+              <Link
+                to={link.href}
                 className={`nav-link${link.active ? ' active' : ''}`}
                 role="menuitem"
-                id={`nav-${link.label.toLowerCase()}`}
+                id={`nav-${link.label.toLowerCase().replace(' ', '-')}`}
                 aria-current={link.active ? 'page' : undefined}
               >
                 {link.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
