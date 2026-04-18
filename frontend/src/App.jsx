@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
 import BookingsPage from './pages/BookingsPage';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogin from './pages/AdminLogin';
@@ -53,6 +54,54 @@ function App() {
             <Route path="/facilities/:id" element={<FacilityDetail />} />
             <Route path="/facilities/create" element={<AddFacility />} />
             <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+            <Route 
+              path="/tickets" 
+              element={
+                <ProtectedRoute>
+                  <TicketList />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tickets/create" 
+              element={
+                <ProtectedRoute allowedRoles={['LECTURER', 'STUDENT']}>
+                  <TicketCreate />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tickets/assigned" 
+              element={
+                <ProtectedRoute allowedRoles={['TECHNICIAN']}>
+                  <TicketList isAssignedView={true} />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tickets/:id" 
+              element={
+                <ProtectedRoute>
+                  <TicketDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin-ticketing" 
+              element={
+                <AdminRoute>
+                  <AdminView />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'TECHNICIAN']}>
+                  <AnalyticsDashboard />
+                </ProtectedRoute>
+              } 
+            />
             <Route
               path="/onboarding"
               element={(

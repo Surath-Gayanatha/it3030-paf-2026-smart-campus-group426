@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UploadCloud, CheckCircle, Mail, Phone, User, Info, MapPin, Tag, X, AlertTriangle } from 'lucide-react';
 import API from '../api/api';
+import { useAuth } from '../context/AuthContext';
 
 const TicketCreate = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     resourceLocation: '',
@@ -16,6 +19,17 @@ const TicketCreate = () => {
     contactEmail: '',
     contactPhone: ''
   });
+
+  // Pre-fill user data when available
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        contactName: user.name || '',
+        contactEmail: user.email || ''
+      }));
+    }
+  }, [user]);
 
   const [images, setImages] = useState([]);       // actual File objects
   const [previews, setPreviews] = useState([]);   // blob preview URLs
@@ -335,14 +349,23 @@ const TicketCreate = () => {
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div style={styles.group}>
-              <label style={styles.label}>Full Name</label>
-              <input required type="text" className="premium-input" placeholder="John Doe" style={styles.input} value={formData.contactName} onChange={e => setFormData({ ...formData, contactName: e.target.value })} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={styles.label}>Full Name</label>
+                {user && (
+                  <span style={{ fontSize: '0.7rem', color: '#16A34A', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: '#DCFCE7', padding: '2px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>
+                    <CheckCircle size={10} /> Verified Profile
+                  </span>
+                )}
+              </div>
+              <input required type="text" className="premium-input" placeholder="John Doe" style={{ ...styles.input, backgroundColor: user ? '#F8FAFC' : '#FFFFFF' }} value={formData.contactName} onChange={e => setFormData({ ...formData, contactName: e.target.value })} readOnly={!!user} />
             </div>
             <div style={styles.group}>
-              <label style={styles.label}>Email Address</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={styles.label}>Email Address</label>
+              </div>
               <div style={{ position: 'relative' }}>
                 <Mail size={18} color="#94A3B8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
-                <input required type="email" className="premium-input" placeholder="john@campus.edu" style={{ ...styles.input, paddingLeft: '48px' }} value={formData.contactEmail} onChange={e => setFormData({ ...formData, contactEmail: e.target.value })} />
+                <input required type="email" className="premium-input" placeholder="john@campus.edu" style={{ ...styles.input, paddingLeft: '48px', backgroundColor: user ? '#F8FAFC' : '#FFFFFF' }} value={formData.contactEmail} onChange={e => setFormData({ ...formData, contactEmail: e.target.value })} readOnly={!!user} />
               </div>
             </div>
           </div>

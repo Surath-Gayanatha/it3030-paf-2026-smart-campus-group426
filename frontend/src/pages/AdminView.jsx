@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Clock, CheckCircle, AlertCircle, Search,
   Filter, ChevronDown, UserCheck, RefreshCw, Eye, Wrench,
-  TrendingUp, Activity, X, ShieldCheck, Zap
+  TrendingUp, Activity, X, ShieldCheck, Zap, Trash2, AlertTriangle, BarChart3, LayoutList
 } from 'lucide-react';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import TicketAnalyticsBoard from '../components/Ticket/TicketAnalyticsBoard';
 
 /* ─── Design Tokens ──────────────────────────────────────────────────────── */
 const TOKEN = {
@@ -43,6 +44,7 @@ const STAT_CARDS = [
   { key:'OPEN',        label:'Open',        icon:Zap,         from:'#2563EB', to:'#3B82F6', shadow:'rgba(59,130,246,0.4)'  },
   { key:'IN_PROGRESS', label:'In Progress', icon:Clock,       from:'#D97706', to:'#F59E0B', shadow:'rgba(245,158,11,0.4)'  },
   { key:'RESOLVED',    label:'Resolved',    icon:CheckCircle, from:'#059669', to:'#10B981', shadow:'rgba(16,185,129,0.4)'  },
+  { key:'CLOSED',      label:'Closed',      icon:ShieldCheck, from:'#475569', to:'#64748B', shadow:'rgba(71,85,105,0.4)'  },
   { key:'unassigned',  label:'Unassigned',  icon:Users,       from:'#DC2626', to:'#EF4444', shadow:'rgba(239,68,68,0.4)'   },
 ];
 
@@ -436,6 +438,11 @@ const AdminView = () => {
   const [sortBy, setSortBy]             = useState('createdAt');
   const [assignTarget, setAssignTarget] = useState(null);
   const [statusTarget, setStatusTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting]           = useState(false);
+  const [viewMode, setViewMode]           = useState('list'); // 'list' or 'analytics'
+  const [stats, setStats]                 = useState(null);
+  const [loadingStats, setLoadingStats]   = useState(false);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
@@ -450,6 +457,18 @@ const AdminView = () => {
     } finally { setLoading(false); }
   }, [statusFilter, priorityFilter]);
 
+  const fetchStats = useCallback(async () => {
+    setLoadingStats(true);
+    try {
+      const res = await API.get('/tickets/stats');
+      setStats(res.data);
+    } catch (err) {
+      console.error('Failed to load stats', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
+
   const fetchTechnicians = useCallback(async () => {
     try {
       const res = await API.get('/auth/users');
@@ -459,16 +478,29 @@ const AdminView = () => {
     }
   }, []);
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await API.delete(`/tickets/${deleteTarget.id}`);
+      setTickets(prev => prev.filter(t => t.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch {
+      alert('Failed to delete ticket.');
+    } finally { setDeleting(false); }
+  };
+
   useEffect(() => {
     if (!authLoading) { 
       if (user) {
         fetchTickets();
         fetchTechnicians();
+        fetchStats();
       } else {
         setError('You must be logged in.');
       }
     }
-  }, [authLoading, user, fetchTickets, fetchTechnicians]);
+  }, [authLoading, user, fetchTickets, fetchTechnicians, fetchStats]);
 
   const counts = {
     ALL:         tickets.length,
@@ -548,17 +580,35 @@ const AdminView = () => {
             Oversee, assign, and resolve all campus maintenance requests.
           </p>
         </div>
-        <button className="adm-btn-ghost" onClick={fetchTickets} style={{ height:'fit-content' }}>
-          <RefreshCw size={15} className={loading ? 'adm-spin' : ''} /> Refresh
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.04)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.05)' }}>
+            <button 
+              onClick={() => setViewMode('list')}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', background: viewMode === 'list' ? '#FFFFFF' : 'transparent', color: viewMode === 'list' ? '#2563EB' : '#64748B', boxShadow: viewMode === 'list' ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none' }}>
+              <LayoutList size={16} /> List View
+            </button>
+            <button 
+              onClick={() => setViewMode('analytics')}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', background: viewMode === 'analytics' ? '#FFFFFF' : 'transparent', color: viewMode === 'analytics' ? '#2563EB' : '#64748B', boxShadow: viewMode === 'analytics' ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none' }}>
+              <BarChart3 size={16} /> Analytics Board
+            </button>
+          </div>
+          <button className="adm-btn-ghost" onClick={() => { fetchTickets(); fetchStats(); }} style={{ height:'fit-content' }}>
+            <RefreshCw size={15} className={(loading || loadingStats) ? 'adm-spin' : ''} /> Refresh
+          </button>
+        </div>
       </div>
 
-      {/* ── Stat Cards ── */}
-      <div style={{ display:'grid', gap:'16px', gridTemplateColumns:'repeat(auto-fit,minmax(195px,1fr))', marginBottom:'32px' }}>
-        {STAT_CARDS.map(({ key, label, icon, from, to, shadow }) => (
-          <StatCard key={key} icon={icon} label={label} value={counts[key] ?? 0} from={from} to={to} shadow={shadow} />
-        ))}
-      </div>
+      {viewMode === 'analytics' ? (
+        <TicketAnalyticsBoard stats={stats} role="ADMIN" />
+      ) : (
+        <>
+          {/* ── Stat Cards ── */}
+          <div style={{ display:'grid', gap:'16px', gridTemplateColumns:'repeat(auto-fit,minmax(195px,1fr))', marginBottom:'32px' }}>
+            {STAT_CARDS.map(({ key, label, icon, from, to, shadow }) => (
+              <StatCard key={key} icon={icon} label={label} value={counts[key] ?? 0} from={from} to={to} shadow={shadow} />
+            ))}
+          </div>
 
       {/* ── Filter Bar ── */}
       <div style={{
@@ -763,6 +813,13 @@ const AdminView = () => {
                       <TrendingUp size={14} />
                     </button>
                   )}
+
+                  <button title="Delete" className="adm-action-btn"
+                    onClick={() => setDeleteTarget(ticket)}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(239,68,68,0.5)'; e.currentTarget.style.color='#EF4444'; e.currentTarget.style.background='rgba(239,68,68,0.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=TOKEN.border; e.currentTarget.style.color=TOKEN.textSec; e.currentTarget.style.background='rgba(0,0,0,0.04)'; }}>
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
             );
@@ -784,9 +841,40 @@ const AdminView = () => {
           </div>
         </div>
       )}
+    </>
+  )}
 
       {assignTarget && <AssignModal ticket={assignTarget} technicians={technicians} onClose={() => setAssignTarget(null)} onAssigned={fetchTickets} />}
       {statusTarget && <StatusModal ticket={statusTarget} onClose={() => setStatusTarget(null)} onUpdated={fetchTickets} />}
+
+      {/* Deletion Modal */}
+      {deleteTarget && (
+        <Overlay onClose={() => setDeleteTarget(null)}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '50%', background: '#FEF2F2',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#DC2626', margin: '0 auto 20px'
+            }}>
+              <AlertTriangle size={32} />
+            </div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.4rem', fontWeight: 800, color: '#1E293B' }}>
+              Confirm Deletion
+            </h3>
+            <p style={{ color: '#64748B', marginBottom: '28px', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Permanently delete **Ticket #{deleteTarget.id.slice(-5)}**? This action cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="adm-btn-ghost" style={{ flex:1 }} onClick={() => setDeleteTarget(null)}>Cancel</button>
+              <button className="adm-btn-primary" style={{ flex:1, background:'#DC2626', boxShadow:'0 8px 16px rgba(220,38,38,0.25)' }} 
+                disabled={deleting} onClick={handleDelete}>
+                {deleting ? 'Deleting…' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </Overlay>
+      )}
     </div>
   );
 };

@@ -79,7 +79,7 @@ const FacilityDetail = () => {
   }, [id]);
 
   if (loading) return (
-    <div className="loading-container" style={{ 
+    <div className="loading-container facility-detail-loading" style={{ 
       height: '100vh', 
       display: 'flex', 
       flexDirection: 'column',
@@ -110,9 +110,9 @@ const FacilityDetail = () => {
   ];
 
   return (
-    <div className="resources-page" style={{ background: '#fcfcfd' }}>
+    <div className="resources-page facility-detail-page" style={{ background: '#fcfcfd' }}>
       <div className="container" style={{ paddingTop: '8rem', paddingBottom: '6rem' }}>
-        <Link to="/resources" className="back-link" style={{ 
+        <Link to="/resources" className="back-link facility-detail-back" style={{ 
           marginBottom: '2rem', 
           display: 'inline-flex', 
           alignItems: 'center',
@@ -128,7 +128,7 @@ const FacilityDetail = () => {
           <span style={{ fontSize: '1.2rem' }}>←</span> Back to Facilities
         </Link>
         
-        <div className="facility-detail-container">
+        <div className="facility-detail-container facility-detail-container--signature">
           <div className="facility-detail-header-section" style={{ marginBottom: '3rem' }}>
             <span className="section-label" style={{ 
               letterSpacing: '2px', 
