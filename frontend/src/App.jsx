@@ -12,6 +12,10 @@ import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
 import BookingsPage from './pages/BookingsPage';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import TicketList from './pages/TicketList';
+import TicketCreate from './pages/TicketCreate';
+import TicketDetail from './pages/TicketDetail';
+import AdminView from './pages/AdminView';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogin from './pages/AdminLogin';
@@ -65,7 +69,7 @@ function App() {
             <Route 
               path="/tickets/create" 
               element={
-                <ProtectedRoute allowedRoles={['LECTURER', 'STUDENT']}>
+                <ProtectedRoute allowedRoles={['LECTURER', 'USER', 'ADMIN']}>
                   <TicketCreate />
                 </ProtectedRoute>
               } 

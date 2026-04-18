@@ -16,7 +16,6 @@ const Navbar = () => {
     const links = [
       { label: 'Home', href: '/', active: path === '/' },
       { label: 'Facilities', href: '/resources', active: path === '/resources' },
-      { label: 'Add Facility', href: '/facilities/create', active: path === '/facilities/create' },
       { label: 'Bookings', href: '/bookings', active: path.startsWith('/bookings') },
     ];
 
