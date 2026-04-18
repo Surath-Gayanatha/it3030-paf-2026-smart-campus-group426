@@ -20,7 +20,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
+import com.smartcampus.backend.dto.TicketStatsResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -198,6 +202,80 @@ public class TicketService {
         }
 
         return mapToResponse(ticketRepository.save(ticket));
+    }
+
+    public TicketStatsResponse getTicketStats() {
+        User currentUser = userService.getCurrentUser();
+        List<Ticket> tickets;
+
+        if (currentUser.getRole() == Role.ADMIN) {
+            tickets = ticketRepository.findAll();
+        } else {
+            // For Technicians or Users, get their relevant tickets
+            if (currentUser.getRole() == Role.TECHNICIAN) {
+                tickets = ticketRepository.findByAssignedTechnicianId(currentUser.getId());
+            } else {
+                tickets = ticketRepository.findByCreatedBy(currentUser.getEmail());
+            }
+        }
+
+        Map<String, Long> statusCounts = tickets.stream()
+                .filter(t -> t.getStatus() != null)
+                .collect(Collectors.groupingBy(t -> t.getStatus().name(), Collectors.counting()));
+        
+        Map<String, Long> priorityCounts = tickets.stream()
+                .filter(t -> t.getPriority() != null)
+                .collect(Collectors.groupingBy(t -> t.getPriority().name(), Collectors.counting()));
+        
+        Map<String, Long> categoryCounts = tickets.stream()
+                .filter(t -> t.getCategory() != null)
+                .collect(Collectors.groupingBy(t -> t.getCategory().name(), Collectors.counting()));
+
+        // Advanced Analytics: Daily Trends (last 7 days mapping)
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("MMM dd");
+        Map<String, Long> dailyTrends = tickets.stream()
+                .filter(t -> t.getCreatedAt() != null)
+                .collect(Collectors.groupingBy(t -> t.getCreatedAt().format(df), 
+                         TreeMap::new, Collectors.counting()));
+
+        // Advanced Analytics: Location Usage
+        Map<String, Long> locationUsage = tickets.stream()
+                .filter(t -> t.getResourceLocation() != null)
+                .collect(Collectors.groupingBy(Ticket::getResourceLocation, Collectors.counting()));
+
+        long total = tickets.size();
+        long resolved = statusCounts.getOrDefault("RESOLVED", 0L) + statusCounts.getOrDefault("CLOSED", 0L);
+        double rate = total == 0 ? 0 : (double) resolved / total * 100;
+
+        return TicketStatsResponse.builder()
+                .statusCounts(statusCounts)
+                .priorityCounts(priorityCounts)
+                .categoryCounts(categoryCounts)
+                .dailyTrends(dailyTrends)
+                .locationUsage(locationUsage)
+                .totalTickets(total)
+                .resolvedTickets(resolved)
+                .resolutionRate(rate)
+                .build();
+    }
+
+    public void deleteTicket(String id) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+
+        User currentUser = userService.getCurrentUser();
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isCreator = ticket.getCreatedBy().equals(currentUser.getEmail());
+
+        if (!isAdmin && !isCreator) {
+            throw new RuntimeException("You are not authorized to delete this ticket.");
+        }
+
+        if (!isAdmin && ticket.getStatus() != TicketStatus.OPEN) {
+            throw new RuntimeException("Only tickets in OPEN status can be deleted by users.");
+        }
+
+        ticketRepository.delete(ticket);
     }
 
     // ── MAPPER ────────────────────────────────────────────────────────────────

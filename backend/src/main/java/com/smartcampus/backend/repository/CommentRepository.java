@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends MongoRepository<Comment, String> {
     
-    List<Comment> findByTicketId(String ticketId);
+    List<Comment> findByTicketIdOrderByCreatedAtAsc(String ticketId);
 }

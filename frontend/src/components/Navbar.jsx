@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -6,14 +6,42 @@ import NotificationBell from './NotificationBell';
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
   const { user, login, logout } = useAuth();
+  const location = useLocation();
 
-  const navLinks = useMemo(() => [
-    { label: 'Home', href: '/', active: true },
-    { label: 'Facilities', href: '/resources' },
-    { label: 'Add Facility', href: '/facilities/create' },
-    { label: 'Bookings', href: '/bookings' },
-    { label: 'Admin Panel', href: '/admin' },
-  ], []);
+  const navLinks = useMemo(() => {
+    const isAdmin = user?.role === 'ADMIN';
+    const isTech = user?.role === 'TECHNICIAN';
+    const path = location.pathname;
+    
+    const links = [
+      { label: 'Home', href: '/', active: path === '/' },
+      { label: 'Facilities', href: '/resources', active: path === '/resources' },
+      { label: 'Add Facility', href: '/facilities/create', active: path === '/facilities/create' },
+      { label: 'Bookings', href: '/bookings', active: path.startsWith('/bookings') },
+    ];
+
+    // Tickets Navigation
+    links.push({ 
+      label: 'Tickets', 
+      href: isAdmin ? '/admin-ticketing' : (isTech ? '/tickets/assigned' : '/tickets'),
+      active: path.startsWith('/tickets') || path === '/admin-ticketing'
+    });
+
+    // Dashboard/Analytics (Only for Admin & Tech)
+    if (isAdmin || isTech) {
+      links.push({ 
+        label: 'Dashboard', 
+        href: '/analytics', 
+        active: path === '/analytics'
+      });
+    }
+
+    if (isAdmin) {
+      links.push({ label: 'Admin Panel', href: '/admin', active: path === '/admin' });
+    }
+
+    return links;
+  }, [user?.role, location.pathname]);
 
   const initials = user?.name
     ? user.name
