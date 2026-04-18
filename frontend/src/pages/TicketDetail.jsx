@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, AlertCircle, CheckCircle, Send, Tag, MapPin, User, Phone, Mail, Wrench } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, MessageSquare, AlertCircle, CheckCircle, Send, Tag, MapPin, User, Phone, Mail, Wrench, Check, X, FilePlus, Archive, Shield, Info, Calendar, Hash, UserCog, TrendingUp, Trash2, AlertTriangle } from 'lucide-react';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,6 +12,94 @@ const STATUS_STYLES = {
   CLOSED:      { color: '#374151', background: '#F3F4F6', border: '1px solid #E5E7EB' },
 };
 
+const TicketProgressBar = ({ status }) => {
+  const isRejected = status === 'REJECTED';
+  const steps = [
+    { id: 'OPEN', label: 'Submitted', icon: FilePlus },
+    { id: 'IN_PROGRESS', label: isRejected ? 'Rejected' : 'In Progress', icon: isRejected ? X : Wrench },
+    { id: 'RESOLVED', label: 'Resolved', icon: CheckCircle },
+    { id: 'CLOSED', label: 'Closed', icon: Archive }
+  ];
+
+  let currentStepIndex = 0;
+  if (status === 'IN_PROGRESS') currentStepIndex = 1;
+  if (status === 'RESOLVED') currentStepIndex = 2;
+  if (status === 'CLOSED') currentStepIndex = 3;
+  if (isRejected) currentStepIndex = 1;
+
+  return (
+    <div style={{ width: '100%', marginBottom: '40px', padding: '0 20px' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto'
+      }}>
+        {/* Background Track */}
+        <div style={{
+          position: 'absolute', top: '16px', left: '8%', right: '8%',
+          height: '4px', background: '#E5E7EB', zIndex: 0, borderRadius: '4px'
+        }} />
+
+        {/* Active Fill */}
+        <div style={{
+          position: 'absolute', top: '16px', left: '8%',
+          height: '4px', zIndex: 1, borderRadius: '4px',
+          background: isRejected ? '#DC2626' : '#1E3A8A',
+          width: currentStepIndex === 0 ? '0%' : currentStepIndex === 1 ? '28%' : currentStepIndex === 2 ? '56%' : '84%',
+          transition: 'width 0.5s ease-in-out, background 0.5s ease-in-out',
+        }} />
+
+        {steps.map((step, index) => {
+          const isActive = index <= currentStepIndex;
+          const isCurrent = index === currentStepIndex && !isRejected;
+          const isStepRejected = isRejected && index === 1;
+
+          let bgColor = '#FFFFFF';
+          let borderColor = '#E5E7EB';
+          let color = '#9CA3AF';
+
+          if (isActive && !isRejected) {
+            bgColor = '#1E3A8A'; borderColor = '#1E3A8A'; color = '#FFFFFF';
+          } else if (isRejected) {
+            if (index === 0) {
+              bgColor = '#10B981'; borderColor = '#10B981'; color = '#FFFFFF';
+            } else if (index === 1) {
+              bgColor = '#DC2626'; borderColor = '#DC2626'; color = '#FFFFFF';
+            }
+          }
+
+          const StepIcon = step.icon;
+
+          return (
+            <div key={step.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2, gap: '10px', width: '80px' }}>
+              <div 
+                className={isCurrent ? 'status-pulse shadow-glow' : ''}
+                style={{
+                  width: '36px', height: '36px', borderRadius: '50%',
+                  background: bgColor, border: `2.5px solid ${borderColor}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: color, 
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: isCurrent ? `0 0 20px ${borderColor}44` : isStepRejected ? '0 0 0 5px rgba(220,38,38,0.1)' : 'none',
+                }}
+              >
+                <StepIcon size={18} strokeWidth={isActive ? 3 : 2} />
+              </div>
+              <span style={{
+                fontSize: '0.75rem', fontWeight: 700,
+                color: isActive ? '#1F2937' : '#9CA3AF',
+                textAlign: 'center', width: 'max-content',
+                textTransform: 'uppercase', letterSpacing: '0.025em'
+              }}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const TicketDetail = () => {
   const { id } = useParams();
   const { user, loading: authLoading } = useAuth();
@@ -21,8 +109,10 @@ const TicketDetail = () => {
   const [commentText, setCommentText]         = useState('');
   const [comments, setComments]               = useState([]);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [statusUpdateData, setStatusUpdateData] = useState({ status: '', notes: '' });
   const [isUpdating, setIsUpdating]           = useState(false);
+  const navigate = useNavigate();
 
   const fetchTicket = async () => {
     try {
@@ -33,9 +123,21 @@ const TicketDetail = () => {
     }
   };
 
+  const fetchComments = async () => {
+    try {
+      const res = await API.get(`/tickets/${id}/comments`);
+      setComments(res.data);
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    }
+  };
+
   useEffect(() => {
     if (!authLoading) {
-      if (user) fetchTicket();
+      if (user) {
+        fetchTicket();
+        fetchComments();
+      }
       else setError('You must be logged in to view this ticket.');
     }
   }, [id, authLoading, user]);
@@ -67,14 +169,39 @@ const TicketDetail = () => {
     finally { setIsUpdating(false); }
   };
 
-  const handlePostComment = (e) => {
+  const handleDeleteTicket = async () => {
+    setIsUpdating(true);
+    try {
+      await API.delete(`/tickets/${id}`);
+      navigate('/tickets');
+    } catch {
+      alert('Failed to delete ticket. Perhaps you lack permission?');
+    } finally {
+      setIsUpdating(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  const handlePostComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
-    setComments(prev => [...prev, {
-      id: Date.now(), author: user?.name || 'You',
-      text: commentText.trim(), createdAt: new Date().toISOString(),
-    }]);
-    setCommentText('');
+    try {
+      await API.post(`/tickets/${id}/comments`, { text: commentText.trim() });
+      setCommentText('');
+      fetchComments();
+    } catch {
+      alert('Failed to post comment.');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    try {
+      await API.delete(`/tickets/comments/${commentId}`);
+      fetchComments();
+    } catch {
+      alert('Failed to delete comment.');
+    }
   };
 
   if (authLoading) return (
@@ -138,6 +265,22 @@ const TicketDetail = () => {
             }}>
               Ticket #{ticket.id.slice(-5)}
             </h2>
+
+            {(user?.role === 'ADMIN' || (ticket.createdBy === user?.email && ticket.status === 'OPEN')) && (
+              <button 
+                onClick={() => setShowDeleteModal(true)}
+                title="Delete Ticket"
+                className="hover-lift"
+                style={{
+                  padding: '8px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)',
+                  color: '#DC2626', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginLeft: '8px', transition: 'all 0.2s'
+                }}
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -185,108 +328,163 @@ const TicketDetail = () => {
         )}
       </div>
 
+      {/* ── Progress Tracker ── */}
+      <TicketProgressBar status={ticket.status} />
+
       {/* ── Body Grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.1fr', gap: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1.15fr', gap: '32px' }}>
 
         {/* ── Left Column ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
           {/* Description Card */}
-          <div style={{
-            background: '#FFFFFF', border: '1px solid #E5E7EB',
-            borderRadius: '12px', padding: '28px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          <div className="glass-card animate-slide-up" style={{
+            borderRadius: '20px', padding: '36px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.04)',
           }}>
             <h3 style={{
-              margin: '0 0 20px 0', fontSize: '1.05rem', fontWeight: 700,
-              color: '#1E3A8A', display: 'flex', alignItems: 'center', gap: '10px',
+              margin: '0 0 24px 0', fontSize: '1.25rem', fontWeight: 800,
+              color: '#1E3A8A', display: 'flex', alignItems: 'center', gap: '12px',
+              fontFamily: 'Poppins, sans-serif'
             }}>
               <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '38px', height: '38px', borderRadius: '10px',
+                background: 'linear-gradient(135deg, #DBEAFE, #EFF6FF)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 10px rgba(59,130,246,0.1)'
               }}>
-                <AlertCircle size={17} color="#1E3A8A" />
+                <Info size={19} color="#1E3A8A" />
               </div>
-              Issue Description
+              Issue Summary
             </h3>
+            
             <div style={{
-              lineHeight: '1.75', color: '#374151',
-              background: '#F8FAFC', border: '1px solid #E5E7EB',
-              padding: '20px', borderRadius: '10px', fontSize: '0.95rem',
-              borderLeft: '3px solid #1E3A8A',
+              lineHeight: '1.8', color: '#334155',
+              background: '#FFFFFF', border: '1px solid #F1F5F9',
+              padding: '24px', borderRadius: '16px', fontSize: '1.05rem',
+              borderLeft: '4px solid #1E3A8A',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
             }}>
               {ticket.description}
             </div>
 
             {ticket.rejectionReason && (
-              <div style={{
-                marginTop: '20px', padding: '18px 20px',
-                background: '#FEF2F2', border: '1px solid #FECACA',
-                borderLeft: '3px solid #DC2626', borderRadius: '10px',
+              <div className="animate-fade-in" style={{
+                marginTop: '24px', padding: '24px',
+                background: '#FEF2F2', border: '1px solid #FEE2E2',
+                borderLeft: '4px solid #DC2626', borderRadius: '16px',
               }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#991B1B', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <AlertCircle size={15} /> Rejection Reason
+                <h4 style={{ margin: '0 0 10px 0', color: '#991B1B', fontSize: '0.9rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <AlertCircle size={17} /> Management Feedback
                 </h4>
-                <p style={{ margin: 0, color: '#7F1D1D', fontSize: '0.9rem', lineHeight: '1.6' }}>{ticket.rejectionReason}</p>
+                <p style={{ margin: 0, color: '#7F1D1D', fontSize: '1rem', lineHeight: '1.7' }}>{ticket.rejectionReason}</p>
               </div>
             )}
 
             {ticket.resolutionNotes && (
-              <div style={{
-                marginTop: '20px', padding: '18px 20px',
-                background: '#F0FDF4', border: '1px solid #A7F3D0',
-                borderLeft: '3px solid #16A34A', borderRadius: '10px',
+              <div className="animate-fade-in" style={{
+                marginTop: '24px', padding: '24px',
+                background: '#F0FDF4', border: '1px solid #DCFCE7',
+                borderLeft: '4px solid #16A34A', borderRadius: '16px',
               }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#15803D', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <CheckCircle size={15} /> Resolution Notes
+                <h4 style={{ margin: '0 0 10px 0', color: '#15803D', fontSize: '0.9rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <CheckCircle size={17} /> Resolution Report
                 </h4>
-                <p style={{ margin: 0, color: '#14532D', fontSize: '0.9rem', lineHeight: '1.6' }}>{ticket.resolutionNotes}</p>
+                <p style={{ margin: 0, color: '#14532D', fontSize: '1rem', lineHeight: '1.7' }}>{ticket.resolutionNotes}</p>
               </div>
             )}
           </div>
 
           {/* Discussion Card */}
-          <div style={{
-            background: '#FFFFFF', border: '1px solid #E5E7EB',
-            borderRadius: '12px', padding: '28px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          <div className="glass-card animate-slide-up" style={{
+            borderRadius: '20px', padding: '36px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.04)',
+            animationDelay: '0.1s'
           }}>
             <h3 style={{
-              margin: '0 0 20px 0', fontSize: '1.05rem', fontWeight: 700,
-              color: '#1E3A8A', display: 'flex', alignItems: 'center', gap: '10px',
+              margin: '0 0 24px 0', fontSize: '1.25rem', fontWeight: 800,
+              color: '#1E3A8A', display: 'flex', alignItems: 'center', gap: '12px',
+              fontFamily: 'Poppins, sans-serif'
             }}>
               <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '38px', height: '38px', borderRadius: '10px',
+                background: 'linear-gradient(135deg, #DBEAFE, #EFF6FF)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 10px rgba(59,130,246,0.1)'
               }}>
-                <MessageSquare size={17} color="#1E3A8A" />
+                <MessageSquare size={19} color="#1E3A8A" />
               </div>
               Discussion Thread
             </h3>
 
             {comments.length === 0 ? (
               <div style={{
-                textAlign: 'center', padding: '40px 20px',
-                color: '#9CA3AF', background: '#F9FAFB',
-                borderRadius: '10px', border: '1px dashed #E5E7EB',
-                fontSize: '0.9rem',
+                textAlign: 'center', padding: '60px 20px',
+                color: '#94A3B8', background: '#F8FAFC',
+                borderRadius: '16px', border: '2px dashed #E2E8F0',
+                fontSize: '0.95rem',
               }}>
-                No comments yet. Start the discussion below.
+                No messages yet. Be the first to start the sync.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                {comments.map(c => (
-                  <div key={c.id} style={{
-                    padding: '14px 18px', background: '#F8FAFC',
-                    borderRadius: '10px', border: '1px solid #E5E7EB',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1E3A8A' }}>{c.author}</span>
-                      <span style={{ fontSize: '0.78rem', color: '#9CA3AF' }}>{new Date(c.createdAt).toLocaleString()}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '28px' }}>
+                {comments.map(c => {
+                  const initial = c.authorName?.charAt(0).toUpperCase() || '?';
+                  const isAuthor = user?.email === c.authorEmail;
+                  const isAdmin = user?.role === 'ADMIN';
+
+                  return (
+                    <div key={c.id} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                      {c.authorAvatar ? (
+                        <img src={c.authorAvatar} alt={c.authorName} style={{
+                          width: '40px', height: '40px', borderRadius: '12px',
+                          objectFit: 'cover', flexShrink: 0,
+                          boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                        }} />
+                      ) : (
+                        <div style={{
+                          width: '40px', height: '40px', borderRadius: '12px',
+                          background: 'linear-gradient(135deg, #1E3A8A, #3B82F6)',
+                          color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
+                          boxShadow: '0 4px 10px rgba(30,58,138,0.15)'
+                        }}>
+                          {initial}
+                        </div>
+                      )}
+                      <div className="animate-fade-in" style={{
+                        flex: 1, padding: '18px 24px', background: isAuthor ? '#F0F9FF' : '#F1F5F9',
+                        borderRadius: isAuthor ? '20px 0 20px 20px' : '0 20px 20px 20px', 
+                        position: 'relative', border: isAuthor ? '1px solid #BAE6FD' : '1px solid #E2E8F0'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#1E3A8A' }}>
+                            {c.authorName} {isAuthor && <span style={{ fontWeight: 500, color: '#0369A1', fontSize: '0.75rem' }}>(You)</span>}
+                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>
+                              {new Date(c.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                            {(isAuthor || isAdmin) && (
+                              <button 
+                                onClick={() => handleDeleteComment(c.id)}
+                                style={{
+                                  background: 'none', border: 'none', padding: 0, 
+                                  color: '#94A3B8', cursor: 'pointer', display: 'flex'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+                                onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
+                              >
+                                <X size={14} strokeWidth={3} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <p style={{ margin: 0, color: '#334155', lineHeight: '1.65', fontSize: '0.98rem' }}>{c.text}</p>
+                      </div>
                     </div>
-                    <p style={{ margin: 0, color: '#374151', lineHeight: '1.6', fontSize: '0.9rem' }}>{c.text}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -323,62 +521,72 @@ const TicketDetail = () => {
         </div>
 
         {/* ── Right Column ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
           {/* Ticket Details Card */}
-          <div style={{
-            background: '#FFFFFF', border: '1px solid #E5E7EB',
-            borderRadius: '12px', overflow: 'hidden',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          <div className="glass-card animate-slide-up hover-lift" style={{
+            borderRadius: '24px', overflow: 'hidden', border: 'none',
+            background: '#FFFFFF', boxShadow: '0 25px 60px rgba(0,0,0,0.06)',
+            animationDelay: '0.2s'
           }}>
             {/* Card header */}
             <div style={{
-              padding: '16px 20px', background: '#1E3A8A',
-              borderBottom: '1px solid #162d6e',
+              padding: '24px 28px', background: 'linear-gradient(135deg, #1E3A8A, #162d6e)',
+              position: 'relative', overflow: 'hidden'
             }}>
+              <div style={{
+                position: 'absolute', top: '-10px', right: '-10px', opacity: 0.1
+              }}>
+                <Shield size={80} color="#fff" />
+              </div>
               <h4 style={{
                 margin: 0, color: '#FFFFFF', fontSize: '0.85rem',
-                fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em',
+                display: 'flex', alignItems: 'center', gap: '10px'
               }}>
-                Ticket Details
+                <Hash size={16} /> Asset Identification
               </h4>
             </div>
 
-            <div style={{ padding: '20px' }}>
+            <div style={{ padding: '32px' }}>
               {[
-                { label: 'PRIORITY', icon: <Tag size={13} color="#3B82F6" />, content: (
+                { label: 'Priority Level', icon: <TrendingUp size={16} />, content: (
                   <span style={{
-                    padding: '3px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 700,
-                    color: ticket.priority === 'HIGH' || ticket.priority === 'CRITICAL' ? '#991B1B' : ticket.priority === 'LOW' ? '#065F46' : '#92400E',
-                    background: ticket.priority === 'HIGH' || ticket.priority === 'CRITICAL' ? '#FEE2E2' : ticket.priority === 'LOW' ? '#D1FAE5' : '#FEF3C7',
+                    padding: '6px 14px', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800,
+                    letterSpacing: '0.04em', textTransform: 'uppercase',
+                    color: ticket.priority === 'HIGH' || ticket.priority === 'CRITICAL' ? '#B91C1C' : ticket.priority === 'LOW' ? '#065F46' : '#B45309',
+                    background: ticket.priority === 'HIGH' || ticket.priority === 'CRITICAL' ? '#FEF2F2' : ticket.priority === 'LOW' ? '#ECFDF5' : '#FFFBEB',
+                    border: '1px solid rgba(0,0,0,0.03)'
                   }}>
                     {ticket.priority}
                   </span>
                 )},
-                { label: 'CATEGORY', icon: <Tag size={13} color="#3B82F6" />, content: ticket.category?.replace('_', ' ') || '—' },
-                { label: 'LOCATION', icon: <MapPin size={13} color="#3B82F6" />, content: ticket.resourceLocation || '—' },
-                { label: 'TECHNICIAN', icon: <Wrench size={13} color="#3B82F6" />, content: ticket.assignedTechnician || (
-                  <span style={{ color: '#DC2626', fontWeight: 600, fontSize: '0.85rem' }}>Unassigned</span>
+                { label: 'Issue Category', icon: <Tag size={16} />, content: ticket.category?.replace('_', ' ') || 'Not Categorized' },
+                { label: 'Specific Location', icon: <MapPin size={16} />, content: ticket.resourceLocation || 'Unknown' },
+                { label: 'Technician assigned', icon: <UserCog size={16} />, content: ticket.assignedTechnician || (
+                  <span style={{ color: '#EF4444', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <AlertCircle size={14} /> Unassigned
+                  </span>
                 )},
-                { label: 'REPORTED BY', icon: <User size={13} color="#3B82F6" />, content: ticket.contactName },
-                { label: 'EMAIL', icon: <Mail size={13} color="#3B82F6" />, content: ticket.contactEmail || '—' },
-                { label: 'PHONE', icon: <Phone size={13} color="#3B82F6" />, content: ticket.contactPhone || '—' },
+                { label: 'Requestor Name', icon: <User size={16} />, content: ticket.contactName },
+                { label: 'Registry Email', icon: <Mail size={16} />, content: ticket.contactEmail || 'No email provided' },
+                { label: 'Direct Contract', icon: <Phone size={16} />, content: ticket.contactPhone || 'No phone provided' },
               ].map(({ label, icon, content }, i, arr) => (
                 <div key={label} style={{
-                  paddingBottom: i < arr.length - 1 ? '16px' : 0,
-                  marginBottom: i < arr.length - 1 ? '16px' : 0,
-                  borderBottom: i < arr.length - 1 ? '1px solid #F3F4F6' : 'none',
+                  paddingBottom: i < arr.length - 1 ? '18px' : 0,
+                  marginBottom: i < arr.length - 1 ? '18px' : 0,
+                  borderBottom: i < arr.length - 1 ? '1px solid #F1F5F9' : 'none',
                 }}>
                   <span style={{
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    fontSize: '0.72rem', fontWeight: 700, color: '#9CA3AF',
-                    marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em',
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    fontSize: '0.72rem', fontWeight: 800, color: '#94A3B8',
+                    marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em',
                   }}>
-                    {icon} {label}
+                    <span style={{ color: '#3B82F6', opacity: 0.8 }}>{icon}</span> {label}
                   </span>
-                  {typeof content === 'string'
-                    ? <span style={{ color: '#1F2937', fontWeight: 600, fontSize: '0.9rem' }}>{content}</span>
-                    : content}
+                  <div style={{ color: '#1E293B', fontWeight: 700, fontSize: '1rem', paddingLeft: '2px' }}>
+                    {content}
+                  </div>
                 </div>
               ))}
             </div>
@@ -386,25 +594,29 @@ const TicketDetail = () => {
 
           {/* Attached Images */}
           {ticket.imageUrls && ticket.imageUrls.length > 0 && (
-            <div style={{
-              background: '#FFFFFF', border: '1px solid #E5E7EB',
-              borderRadius: '12px', padding: '20px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            <div className="glass-card animate-slide-up hover-lift" style={{
+              borderRadius: '24px', padding: '28px',
+              background: '#FFFFFF', boxShadow: '0 25px 60px rgba(0,0,0,0.06)',
+              animationDelay: '0.3s'
             }}>
               <h4 style={{
-                margin: '0 0 14px 0', color: '#1E3A8A', fontSize: '0.85rem',
-                fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+                margin: '0 0 18px 0', color: '#1E3A8A', fontSize: '0.85rem',
+                fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em',
+                display: 'flex', alignItems: 'center', gap: '10px'
               }}>
-                Attached Images
+                <Calendar size={16} /> Attached Evidence
               </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 {ticket.imageUrls.map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', overflow: 'hidden', borderRadius: '14px' }}>
                     <img src={url} alt={`Attachment ${i + 1}`} style={{
-                      width: '100%', borderRadius: '8px', objectFit: 'cover',
-                      aspectRatio: '1', border: '1px solid #E5E7EB',
-                      transition: 'opacity 0.18s ease',
-                    }} />
+                      width: '100%', borderRadius: '14px', objectFit: 'cover',
+                      aspectRatio: '1', border: '1px solid #F1F5F9',
+                      transition: 'transform 0.3s ease',
+                    }} 
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    />
                   </a>
                 ))}
               </div>
@@ -462,24 +674,73 @@ const TicketDetail = () => {
               />
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
-              <button disabled={isUpdating} onClick={() => setShowStatusModal(false)}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
+              <button className="hover-lift" disabled={isUpdating} onClick={() => setShowStatusModal(false)}
                 style={{
-                  padding: '10px 20px', background: '#FFFFFF', color: '#374151',
-                  border: '1.5px solid #E5E7EB', borderRadius: '8px',
-                  fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer',
+                  padding: '12px 24px', background: '#FFFFFF', color: '#1E293B',
+                  border: '1px solid #E2E8F0', borderRadius: '12px',
+                  fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}>
                 Cancel
               </button>
-              <button disabled={isUpdating} onClick={handleStatusUpdate}
+              <button title="Confirm and apply changes" className="hover-lift" disabled={isUpdating} onClick={handleStatusUpdate}
                 style={{
-                  padding: '10px 20px', fontWeight: 600, fontSize: '0.875rem',
-                  border: 'none', borderRadius: '8px', cursor: 'pointer', color: '#FFFFFF',
-                  background: statusUpdateData.status === 'RESOLVED' ? '#16A34A'
-                    : statusUpdateData.status === 'REJECTED' ? '#DC2626' : '#1E3A8A',
-                  boxShadow: '0 4px 12px rgba(30,58,138,0.25)',
+                  padding: '12px 28px', fontWeight: 700, fontSize: '0.9rem',
+                  border: 'none', borderRadius: '12px', cursor: 'pointer', color: '#FFFFFF',
+                  background: statusUpdateData.status === 'RESOLVED' ? 'linear-gradient(135deg, #16A34A, #15803D)'
+                    : statusUpdateData.status === 'REJECTED' ? 'linear-gradient(135deg, #DC2626, #B91C1C)' : 'linear-gradient(135deg, #1E3A8A, #162d6e)',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                  transition: 'all 0.2s ease',
                 }}>
-                {isUpdating ? 'Updating…' : 'Confirm Update'}
+                {isUpdating ? 'Applying…' : 'Finalize Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Deletion Confirmation Modal ── */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div className="animate-slide-up" style={{
+            width: '100%', maxWidth: '400px', background: '#FFFFFF',
+            borderRadius: '20px', padding: '32px', textAlign: 'center',
+            boxShadow: '0 25px 70px rgba(0,0,0,0.3)', border: '1px solid #E5E7EB',
+          }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '50%', background: '#FEF2F2',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#DC2626', margin: '0 auto 20px'
+            }}>
+              <AlertTriangle size={32} />
+            </div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.4rem', fontWeight: 800, color: '#1E293B' }}>
+              Confirm Deletion
+            </h3>
+            <p style={{ color: '#64748B', marginBottom: '28px', fontSize: '0.95rem', lineHeight: '1.6' }}>
+              Are you sure you want to permanently delete **Ticket #{ticket.id.slice(-5)}**? This action cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="hover-lift" onClick={() => setShowDeleteModal(false)}
+                style={{
+                  flex: 1, padding: '12px', background: '#F8FAFC', color: '#475569',
+                  border: '1px solid #E2E8F0', borderRadius: '12px',
+                  fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer'
+                }}>
+                Keep Ticket
+              </button>
+              <button className="hover-lift" disabled={isUpdating} onClick={handleDeleteTicket}
+                style={{
+                  flex: 1, padding: '12px', background: '#DC2626', color: '#FFFFFF',
+                  border: 'none', borderRadius: '12px', fontWeight: 700,
+                  fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 8px 16px rgba(220,38,38,0.25)'
+                }}>
+                {isUpdating ? 'Deleting…' : 'Yes, Delete'}
               </button>
             </div>
           </div>

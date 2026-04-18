@@ -1,17 +1,17 @@
 package com.smartcampus.backend.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document(collection = "comment")
+@Document(collection = "comments")
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,14 +21,15 @@ public class Comment {
     @Id
     private String id;
 
-    @NotBlank(message = "Comment text is required")
-    private String text;
-
     private String ticketId;
-
-    @NotBlank
-    private String authorUsername;
+    private String authorEmail;
+    private String authorName;
+    private String authorAvatar;
+    private String text;
 
     @CreatedDate
     private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }

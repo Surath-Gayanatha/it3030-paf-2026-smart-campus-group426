@@ -13,6 +13,7 @@ import TicketList from './pages/TicketList';
 import TicketDetail from './pages/TicketDetail';
 import AdminView from './pages/AdminView';
 import AdminPanel from './pages/AdminPanel';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -85,6 +86,14 @@ function App() {
               <AdminRoute>
                 <AdminView />
               </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/analytics" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'TECHNICIAN']}>
+                <AnalyticsDashboard />
+              </ProtectedRoute>
             } 
           />
           <Route
