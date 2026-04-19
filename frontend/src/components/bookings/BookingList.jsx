@@ -64,7 +64,16 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
         }
     };
 
-    const isFuture = (dateStr) => new Date(dateStr) > new Date();
+    const parseDateObj = (dateVal) => {
+        if (!dateVal) return new Date();
+        if (Array.isArray(dateVal)) {
+            return new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0);
+        }
+        return new Date(dateVal);
+    };
+
+    const isFuture = (dateStr) => parseDateObj(dateStr) > new Date();
+    const isNotExpired = (dateStr) => parseDateObj(dateStr) >= new Date();
 
     const handleDownloadPass = (booking) => {
         const doc = new jsPDF();
@@ -82,8 +91,8 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
         
         doc.setFontSize(12);
         doc.setTextColor(100);
-        doc.text(`From: ${new Date(booking.startTime).toLocaleString()}`, 20, 80);
-        doc.text(`To: ${new Date(booking.endTime).toLocaleString()}`, 20, 90);
+        doc.text(`From: ${parseDateObj(booking.startTime).toLocaleString()}`, 20, 80);
+        doc.text(`To: ${parseDateObj(booking.endTime).toLocaleString()}`, 20, 90);
         
         const canvas = document.getElementById(`qr-${booking.id}`);
         if (canvas) {
@@ -101,7 +110,7 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
     if (loading) return <div>Loading bookings...</div>;
     if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
-    const formatDate = (dateStr) => new Date(dateStr).toLocaleString();
+    const formatDate = (dateStr) => parseDateObj(dateStr).toLocaleString();
 
     const filteredBookings = bookings.filter(b => 
         statusFilter === 'ALL' || b.status === statusFilter
@@ -148,11 +157,11 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
                         </div>
                         
                         <div className="booking-actions">
-                            {/* ANY user can Edit/Cancel their OWN pending bookings IF it's in the future */}
-                            {booking.status === 'PENDING' && currentUser?.id === booking.userId && isFuture(booking.startTime) && (
+                            {/* ANY user can Edit/Cancel their OWN pending bookings at any time to fix them, or cancel any that aren't fully expired yet */}
+                            {booking.status === 'PENDING' && currentUser?.id === booking.userId && (
                                 <button className="btn-primary" onClick={() => onEdit(booking)}>Edit</button>
                             )}
-                            {(booking.status === 'PENDING' || booking.status === 'APPROVED') && currentUser?.id === booking.userId && isFuture(booking.startTime) && (
+                            {((booking.status === 'PENDING') || (booking.status === 'APPROVED' && isNotExpired(booking.endTime))) && currentUser?.id === booking.userId && (
                                 <button className="btn-ghost" style={{color: '#f59e0b', borderColor: '#f59e0b'}} onClick={() => handleCancel(booking)}>Cancel</button>
                             )}
                             
@@ -165,8 +174,8 @@ const BookingList = ({ onEdit, onReview, isAdmin, statusFilter, currentUser }) =
                                 <button className="btn-ghost" style={{color: 'white', backgroundColor: '#ef4444', borderColor: '#ef4444'}} onClick={() => handleDelete(booking)}>Delete</button>
                             )}
 
-                            {/* Admins can review PENDING bookings from OTHER users */}
-                            {booking.status === 'PENDING' && isAdmin && currentUser?.id !== booking.userId && isFuture(booking.startTime) && (
+                            {/* Admins can ALWAYS review PENDING bookings from OTHER users, even if the user incorrectly booked a close-to-past time */}
+                            {booking.status === 'PENDING' && isAdmin && currentUser?.id !== booking.userId && (
                                 <button className="btn-primary" onClick={() => onReview(booking)}>Review</button>
                             )}
                         </div>

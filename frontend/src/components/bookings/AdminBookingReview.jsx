@@ -19,6 +19,14 @@ const AdminBookingReview = ({ booking, onClose, onRefresh }) => {
         }
     };
 
+    const parseDateObj = (dateVal) => {
+        if (!dateVal) return new Date();
+        if (Array.isArray(dateVal)) {
+            return new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0);
+        }
+        return new Date(dateVal);
+    };
+
     return (
         <div className="modal-overlay">
             <div className="modal-content">
@@ -28,7 +36,7 @@ const AdminBookingReview = ({ booking, onClose, onRefresh }) => {
                 <div className="booking-info" style={{ marginBottom: '1.5rem' }}>
                     <p><strong>Resource:</strong> {booking.resourceId}</p>
                     <p><strong>Purpose:</strong> {booking.purpose}</p>
-                    <p><strong>Time:</strong> {new Date(booking.startTime).toLocaleString()} - {new Date(booking.endTime).toLocaleString()}</p>
+                    <p><strong>Time:</strong> {parseDateObj(booking.startTime).toLocaleString()} - {parseDateObj(booking.endTime).toLocaleString()}</p>
                     <p><strong>Attendees:</strong> {booking.expectedAttendees}</p>
                 </div>
                 

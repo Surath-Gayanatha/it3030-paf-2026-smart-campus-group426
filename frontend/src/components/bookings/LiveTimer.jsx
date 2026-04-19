@@ -4,37 +4,55 @@ const LiveTimer = ({ startTime, endTime }) => {
     const [status, setStatus] = useState('');
     const [timeLeft, setTimeLeft] = useState('');
 
+    const parseDateObj = (dateVal) => {
+        if (!dateVal) return new Date();
+        if (Array.isArray(dateVal)) {
+            return new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0);
+        }
+        return new Date(dateVal);
+    };
+
     useEffect(() => {
         const calculateTime = () => {
             const now = new Date().getTime();
-            const start = new Date(startTime).getTime();
-            const end = new Date(endTime).getTime();
+            const start = parseDateObj(startTime).getTime();
+            const end = parseDateObj(endTime).getTime();
 
             if (now < start) {
                 const diff = start - now;
-                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((diff / 1000 / 60) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+                
                 setStatus('UPCOMING');
-                if (diff < (1000 * 60 * 60 * 24)) {
-                   setTimeLeft(`Starts in: ${hours}h ${minutes}m`);
+                if (days > 0) {
+                    setTimeLeft(`Starts in: ${days}d ${hours}h ${minutes}m`);
                 } else {
-                   setTimeLeft("");
+                    setTimeLeft(`Starts in: ${hours}h ${minutes}m ${seconds}s`);
                 }
             } else if (now >= start && now <= end) {
                 const diff = end - now;
-                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((diff / 1000 / 60) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+                
                 setStatus('IN_PROGRESS');
-                setTimeLeft(`🟢 IN PROGRESS - ${hours}h ${minutes}m remaining`);
+                if (days > 0) {
+                    setTimeLeft(`🟢 IN PROGRESS - ${days}d ${hours}h ${minutes}m remaining`);
+                } else {
+                    setTimeLeft(`🟢 IN PROGRESS - ${hours}h ${minutes}m ${seconds}s remaining`);
+                }
             } else {
                 setStatus('COMPLETED');
                 setTimeLeft('Historic Booking');
             }
         };
 
-        // Run immediately then every 60 seconds
+        // Run immediately then every 1 second
         calculateTime();
-        const intervalId = setInterval(calculateTime, 60000);
+        const intervalId = setInterval(calculateTime, 1000);
 
         return () => clearInterval(intervalId);
     }, [startTime, endTime]);

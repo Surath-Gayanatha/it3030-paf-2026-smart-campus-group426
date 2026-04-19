@@ -5,10 +5,23 @@ import './Bookings.css';
 
 const BookingForm = ({ initialData, onClose, onRefresh }) => {
     const isEdit = !!initialData;
+    const toLocalISOString = (dateVal) => {
+        if (!dateVal) return '';
+        let d;
+        if (Array.isArray(dateVal)) {
+            d = new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0);
+        } else {
+            d = new Date(dateVal);
+        }
+        if (isNaN(d.getTime())) return '';
+        const offset = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - offset).toISOString().slice(0,16);
+    };
+
     const [formData, setFormData] = useState({
         resourceId: initialData?.resourceId || '',
-        startTime: initialData?.startTime ? new Date(initialData.startTime).toISOString().slice(0, 16) : '',
-        endTime: initialData?.endTime ? new Date(initialData.endTime).toISOString().slice(0, 16) : '',
+        startTime: initialData?.startTime ? toLocalISOString(initialData.startTime) : '',
+        endTime: initialData?.endTime ? toLocalISOString(initialData.endTime) : '',
         purpose: initialData?.purpose || '',
         expectedAttendees: initialData?.expectedAttendees || ''
     });
