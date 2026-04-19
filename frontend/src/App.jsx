@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
 import BookingsPage from './pages/BookingsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import TicketList from './pages/TicketList';
 import TicketCreate from './pages/TicketCreate';
@@ -23,7 +24,6 @@ import Resources from './pages/Resources';
 import AddFacility from './pages/AddFacility';
 import FacilityDetail from './pages/FacilityDetail';
 import NotificationPreferences from './pages/NotificationPreferences';
-import NotificationsPage from './pages/NotificationsPage';
 
 const HomePage = () => {
   return (
@@ -100,13 +100,13 @@ function App() {
                 </ProtectedRoute>
               )}
             />
-            <Route
-              path="/notifications"
+            <Route 
+              path="/notifications" 
               element={
                 <ProtectedRoute>
                   <NotificationsPage />
                 </ProtectedRoute>
-              }
+              } 
             />
             <Route 
               path="/admin-ticketing" 

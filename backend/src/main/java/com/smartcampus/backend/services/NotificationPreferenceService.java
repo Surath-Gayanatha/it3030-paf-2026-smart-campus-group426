@@ -52,6 +52,7 @@ public class NotificationPreferenceService {
                     case BOOKING_REJECTED -> preference.isBookingRejected();
                     case BOOKING_CANCELLED -> preference.isBookingCancelled();
                     case TICKET_STATUS_CHANGED -> preference.isTicketStatusChanged();
+                    case TICKET_ASSIGNED -> preference.isTicketStatusChanged();
                     case NEW_COMMENT -> preference.isNewComment();
                 })
                 .orElse(true);

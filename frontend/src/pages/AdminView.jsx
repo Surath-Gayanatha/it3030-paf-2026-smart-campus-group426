@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Clock, CheckCircle, AlertCircle, Search,
@@ -257,6 +257,17 @@ const AssignModal = ({ ticket, technicians, onClose, onAssigned }) => {
   const techName = custom.trim() || selectedName;
   const techId   = custom.trim() ? null : selectedId;
 
+  // 🧠 Intelligent Sorting: Specialists first
+  const sortedTechnicians = useMemo(() => {
+    return [...technicians].sort((a, b) => {
+      const aMatches = a.techCategory === ticket.category;
+      const bMatches = b.techCategory === ticket.category;
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [technicians, ticket.category]);
+
   const handleAssign = async () => {
     if (!techName) { setError('Please select or enter a technician.'); return; }
     setLoading(true);
@@ -282,28 +293,35 @@ const AssignModal = ({ ticket, technicians, onClose, onAssigned }) => {
       </p>
 
       <p style={{ color:TOKEN.textMut, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.1em', margin:'0 0 10px', textTransform:'uppercase' }}>
-        Available Technicians
+        Recommended Specialists
       </p>
       <div style={{ display:'flex', flexDirection:'column', gap:'6px', marginBottom:'20px' }}>
-        {technicians.map((t, i) => {
+        {sortedTechnicians.map((t, i) => {
           const active = selectedId === t.id && !custom;
+          const isSpecialist = t.techCategory === ticket.category;
           return (
             <button key={t.id} onClick={() => { setSelectedName(t.name); setSelectedId(t.id); setCustom(''); }} style={{
-              alignItems:'center', background: active ? 'rgba(37,99,235,0.08)' : 'rgba(0,0,0,0.02)',
-              border:`1px solid ${active ? 'rgba(37,99,235,0.4)' : TOKEN.border}`,
+              alignItems:'center', background: active ? 'rgba(37,99,235,0.08)' : (isSpecialist ? 'rgba(16,185,129,0.04)' : 'rgba(0,0,0,0.02)'),
+              border:`1px solid ${active ? 'rgba(37,99,235,0.4)' : (isSpecialist ? 'rgba(16,185,129,0.3)' : TOKEN.border)}`,
               borderRadius:'10px', color: active ? '#1E3A8A' : TOKEN.textSec, cursor:'pointer',
               display:'flex', gap:'10px', fontFamily:'Outfit,sans-serif', fontSize:'0.88rem',
               fontWeight: active ? 700 : 500, padding:'11px 14px', textAlign:'left', transition:'all 0.15s',
             }}>
               <div style={{
-                alignItems:'center', background: active ? '#2563EB' : avatarColors[i % avatarColors.length] + '25',
-                borderRadius:'50%', color: active ? '#fff' : avatarColors[i % avatarColors.length],
+                alignItems:'center', background: active ? '#2563EB' : (isSpecialist ? '#10B981' : avatarColors[i % avatarColors.length] + '25'),
+                borderRadius:'50%', color: (active || isSpecialist) ? '#fff' : avatarColors[i % avatarColors.length],
                 display:'flex', flexShrink:0, fontSize:'0.72rem', fontWeight:800,
                 height:'32px', justifyContent:'center', width:'32px',
               }}>
-                {initials(t.name)}
+                {isSpecialist && !active ? <Wrench size={14} /> : initials(t.name)}
               </div>
-              {t.name}
+              <div style={{ flex: 1 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+                  {t.name}
+                  {isSpecialist && <span style={{ background:'rgba(16,185,129,0.1)', color:'#10B981', fontSize:'0.65rem', fontWeight:800, padding:'2px 8px', borderRadius:'4px', letterSpacing:'0.05em' }}>EXPERT MATCH</span>}
+                </div>
+                {isSpecialist && <p style={{ margin:0, fontSize:'0.7rem', color:'#10B981', fontWeight:500 }}>Specializes in {t.techCategory.replace('_',' ')}</p>}
+              </div>
               {active && <span style={{ marginLeft:'auto', background:'rgba(37,99,235,0.1)', border:'1px solid rgba(37,99,235,0.3)', borderRadius:'6px', color:'#2563EB', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px' }}>Selected</span>}
             </button>
           );

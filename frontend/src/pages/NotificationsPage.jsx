@@ -1,701 +1,262 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/axiosConfig';
+import { 
+  Bell, CheckCircle2, AlertCircle, 
+  Trash2, MailOpen, Clock, 
+  ShieldCheck, Wrench, Info, X, 
+  Search, ChevronRight, Activity, Calendar, XCircle
+} from 'lucide-react';
+import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 
-const timeAgo = (dateString) => {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return diffMins + ' minutes ago';
-  if (diffHours < 24) return diffHours + ' hours ago';
-  return diffDays + ' days ago';
-};
-
-const getNotificationKind = (type) => {
-  if (type?.includes('BOOKING')) return 'BOOKING';
-  if (type?.includes('TICKET')) return 'TICKET';
-  if (type === 'NEW_COMMENT') return 'COMMENT';
-  return 'GENERAL';
-};
-
-const typeLabel = (type) => {
-  if (!type) return 'General';
-  return type.replaceAll('_', ' ');
-};
-
-const truncate = (text, max = 60) => {
-  if (!text) return '';
-  return text.length > max ? text.slice(0, max) + '...' : text;
-};
-
-const getNavigatePath = (notification) => {
-  if (!notification?.referenceId) return null;
-
-  const kind = getNotificationKind(notification.type);
-  if (kind === 'TICKET' || kind === 'COMMENT') {
-    return `/tickets/${notification.referenceId}`;
-  }
-  if (kind === 'BOOKING') {
-    return '/bookings';
-  }
-
-  return null;
-};
-
 const NotificationsPage = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('ALL');
-  const [selectedId, setSelectedId] = useState('');
-  const [error, setError] = useState('');
-  const [relatedDetails, setRelatedDetails] = useState(null);
-  const [relatedLoading, setRelatedLoading] = useState(false);
-  const [relatedError, setRelatedError] = useState('');
+  const [error, setError] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('ALL'); 
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-    navigate('/');
-  };
-
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications]
-  );
-
-  const filteredNotifications = useMemo(() => {
-    if (activeFilter === 'BOOKINGS') {
-      return notifications.filter((n) => n.type?.includes('BOOKING'));
-    }
-    if (activeFilter === 'TICKETS') {
-      return notifications.filter((n) => n.type?.includes('TICKET'));
-    }
-    if (activeFilter === 'COMMENTS') {
-      return notifications.filter((n) => n.type === 'NEW_COMMENT');
-    }
-    return notifications;
-  }, [activeFilter, notifications]);
-
-  const selectedNotification = useMemo(
-    () => filteredNotifications.find((n) => n.id === selectedId) || null,
-    [filteredNotifications, selectedId]
-  );
-
-  const loadNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
     try {
-      setError('');
       setLoading(true);
-      const response = await api.get('/notifications');
-      setNotifications(response.data || []);
-    } catch (requestError) {
-      setError('Failed to load notifications');
+      setError(null);
+      const res = await API.get('/notifications');
+      setNotifications(res.data || []);
+    } catch (err) {
+      setError('System notifications currently unavailable.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    if (authLoading || !user) {
-      return;
-    }
-    loadNotifications();
-  }, [authLoading, user]);
+    fetchNotifications();
+  }, [fetchNotifications]);
 
-  useEffect(() => {
-    if (!filteredNotifications.length) {
-      setSelectedId('');
-      return;
-    }
-    if (!selectedId || !filteredNotifications.some((n) => n.id === selectedId)) {
-      setSelectedId(filteredNotifications[0].id);
-    }
-  }, [filteredNotifications, selectedId]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadRelatedDetails = async () => {
-      if (!selectedNotification?.referenceId) {
-        setRelatedDetails(null);
-        setRelatedError('');
-        return;
-      }
-
-      const kind = getNotificationKind(selectedNotification.type);
-      if (kind !== 'TICKET' && kind !== 'COMMENT' && kind !== 'BOOKING') {
-        setRelatedDetails(null);
-        setRelatedError('');
-        return;
-      }
-
-      try {
-        setRelatedLoading(true);
-        setRelatedError('');
-
-        if (kind === 'TICKET' || kind === 'COMMENT') {
-          const response = await api.get(`/tickets/${selectedNotification.referenceId}`);
-          if (!cancelled) {
-            setRelatedDetails({
-              kind: 'TICKET',
-              message: response.data?.description || '',
-              status: response.data?.status || '',
-              category: response.data?.category || '',
-              resourceLocation: response.data?.resourceLocation || '',
-            });
-          }
-          return;
-        }
-
-        const response = await api.get(`/bookings/${selectedNotification.referenceId}`);
-        if (!cancelled) {
-          setRelatedDetails({
-            kind: 'BOOKING',
-            message: response.data?.purpose || '',
-            status: response.data?.status || '',
-            startTime: response.data?.startTime || '',
-            endTime: response.data?.endTime || '',
-            expectedAttendees: response.data?.expectedAttendees,
-            resourceId: response.data?.resourceId || '',
-          });
-        }
-      } catch (requestError) {
-        if (!cancelled) {
-          setRelatedDetails(null);
-          setRelatedError('Could not load detailed message for this notification.');
-        }
-      } finally {
-        if (!cancelled) {
-          setRelatedLoading(false);
-        }
-      }
-    };
-
-    loadRelatedDetails();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedNotification]);
-
-  const handleSelectNotification = async (item) => {
-    setSelectedId(item.id);
-
-    if (item.read) {
-      return;
-    }
-
+  const handleMarkAsRead = async (id) => {
     try {
-      await api.put(`/notifications/${item.id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
-      );
-    } catch (requestError) {
-      setError('Could not mark notification as read');
-    }
+      await API.put(`/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    } catch (err) { console.error(err); }
   };
 
-  const handleMarkAllAsRead = async () => {
-    if (!notifications.some((n) => !n.read)) {
-      return;
-    }
-
+  const handleMarkAllRead = async () => {
     try {
-      await api.put('/notifications/read-all');
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    } catch (requestError) {
-      setError('Could not mark all as read');
-    }
+      await API.put('/notifications/read-all');
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (err) { console.error(err); }
   };
 
-  const handleDeleteSelected = async () => {
-    if (!selectedNotification) {
-      return;
-    }
-
-    const deletingId = selectedNotification.id;
-    if (!deletingId) {
-      return;
-    }
-
-    setError('');
-    setNotifications((prev) => prev.filter((n) => n.id !== deletingId));
-    setSelectedId('');
-
+  const handleDelete = async (id) => {
     try {
-      await api.delete(`/notifications/${deletingId}`);
-    } catch (requestError) {
-      // Best-effort delete: keep UI clean even if backend item is already gone.
+      await API.delete(`/notifications/${id}`);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (err) { console.error(err); }
+  };
+
+  const getTimeAgo = (value) => {
+    if (!value) return 'Just now';
+    const created = new Date(value);
+    const now = new Date();
+    const diffS = Math.floor((now.getTime() - created.getTime()) / 1000);
+    if (diffS < 60) return 'Just now';
+    const diffM = Math.floor(diffS / 60);
+    if (diffM < 60) return `${diffM}m ago`;
+    const diffH = Math.floor(diffM / 60);
+    if (diffH < 24) return `${diffH}h ago`;
+    return `${Math.floor(diffH/24)}d ago`;
+  };
+
+  const getIcon = (type) => {
+    const iconProps = { size: 18, strokeWidth: 2 };
+    switch (type) {
+      case 'TICKET_ASSIGNED':       return <Wrench {...iconProps} style={{ color: '#2563EB' }} />;
+      case 'TICKET_STATUS_CHANGED': return <CheckCircle2 {...iconProps} style={{ color: '#059669' }} />;
+      case 'BOOKING_APPROVED':      return <CheckCircle2 {...iconProps} style={{ color: '#10B981' }} />;
+      case 'BOOKING_REJECTED':      return <XCircle {...iconProps} style={{ color: '#EF4444' }} />;
+      case 'BOOKING_CANCELLED':     return <AlertCircle {...iconProps} style={{ color: '#F59E0B' }} />;
+      case 'ROLE_REVIEW':           return <ShieldCheck {...iconProps} style={{ color: '#4F46E5' }} />;
+      case 'NEW_COMMENT':           return <Info {...iconProps} style={{ color: '#D97706' }} />;
+      default:                      return <Bell {...iconProps} style={{ color: '#475569' }} />;
     }
   };
 
-  const handleNavigate = () => {
-    if (!selectedNotification) {
-      return;
-    }
+  const filteredItems = notifications.filter(n => {
+    const matchesSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          n.message.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (activeFilter === 'UNREAD') return !n.read;
+    if (activeFilter === 'TICKETS') return n.type?.includes('TICKET') || n.type === 'NEW_COMMENT';
+    if (activeFilter === 'BOOKINGS') return n.type?.includes('BOOKING');
+    if (activeFilter === 'SYSTEM') return n.type === 'ROLE_REVIEW';
+    return true;
+  });
 
-    const kind = getNotificationKind(selectedNotification.type);
-    if ((kind === 'TICKET' || kind === 'COMMENT') && (!relatedDetails || relatedError)) {
-      setRelatedError('Related ticket is unavailable for navigation.');
-      return;
-    }
-
-    const path = getNavigatePath(selectedNotification);
-    if (path) {
-      navigate(path);
-    }
-  };
-
-  const canNavigate = !!getNavigatePath(selectedNotification) && !relatedLoading && (
-    getNotificationKind(selectedNotification?.type) === 'BOOKING' ||
-    (!!relatedDetails && !relatedError)
-  );
-
-  const filters = [
-    { key: 'ALL', label: 'All' },
-    { key: 'BOOKINGS', label: 'Bookings' },
-    { key: 'TICKETS', label: 'Tickets' },
-    { key: 'COMMENTS', label: 'Comments' },
-  ];
-
-  if (authLoading || loading) {
-    return (
-      <div style={{
-        minHeight: 'calc(100vh - 100px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#475569',
-        fontWeight: 600,
-      }}>
-        Loading notifications...
-      </div>
-    );
-  }
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <section style={{
-      minHeight: 'calc(100vh - 80px)',
-      background: '#f8fafc',
-      padding: '24px 16px 40px',
-    }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        <button
-          type="button"
-          onClick={handleBack}
-          style={{
-            marginBottom: '12px',
-            border: '1px solid #cbd5e1',
-            background: '#ffffff',
-            color: '#334155',
-            borderRadius: '8px',
-            fontSize: '0.82rem',
-            fontWeight: 700,
-            padding: '8px 12px',
-            cursor: 'pointer',
-          }}
-        >
-          ← Back
-        </button>
-
-        {error && (
-          <div style={{
-            marginBottom: '12px',
-            border: '1px solid #fecaca',
-            background: '#fef2f2',
-            color: '#991b1b',
-            padding: '10px 12px',
-            borderRadius: '10px',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-          }}>
-            {error}
-          </div>
-        )}
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '35% 65%',
-          gap: '14px',
-          minHeight: '72vh',
+    <div style={{ minHeight: '100vh', background: '#FDFDFD', color: '#1E293B' }}>
+      {/* ── Elegant Header ── */}
+      <div style={{ 
+        background: 'linear-gradient(to bottom, #F8FAFC 0%, #FFFFFF 100%)',
+        borderBottom: '1px solid #F1F5F9',
+        padding: '60px 0 100px',
+        textAlign: 'center'
+      }}>
+        <div style={{ 
+          width: '64px', height: '64px', background: '#FFFFFF', borderRadius: '18px', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', 
+          margin: '0 auto 20px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+          border: '1px solid #E2E8F0'
         }}>
-          <div style={{
-            border: '1px solid #e2e8f0',
-            borderRadius: '12px',
-            background: '#ffffff',
-            boxShadow: '0 4px 14px rgba(15, 23, 42, 0.04)',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-          }}>
-            <div style={{
-              padding: '16px',
-              borderBottom: '1px solid #f1f5f9',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>Notifications</h2>
-                <span style={{
-                  background: '#dbeafe',
-                  color: '#1d4ed8',
-                  borderRadius: '999px',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  padding: '2px 9px',
-                }}>
-                  {unreadCount}
-                </span>
-              </div>
+          <Activity size={28} color="#1E3A8A" />
+        </div>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 700, margin: '0 0 8px', color: '#0F172A', letterSpacing: '-0.025em' }}>
+          Notification Center
+        </h1>
+        <p style={{ fontSize: '1rem', color: '#64748B', maxWidth: '500px', margin: '0 auto' }}>
+          A sophisticated overview of your campus activities and alerts.
+        </p>
+      </div>
 
-              <button
-                type="button"
-                onClick={handleMarkAllAsRead}
-                style={{
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#334155',
-                  borderRadius: '8px',
-                  fontSize: '0.76rem',
-                  fontWeight: 600,
-                  padding: '6px 9px',
-                  cursor: 'pointer',
-                }}
-              >
-                Mark all as read
-              </button>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '8px',
-              padding: '12px 12px 10px',
-              borderBottom: '1px solid #f1f5f9',
-              flexWrap: 'wrap',
-            }}>
-              {filters.map((filter) => {
-                const isActive = activeFilter === filter.key;
-                return (
-                  <button
-                    key={filter.key}
-                    type="button"
-                    onClick={() => setActiveFilter(filter.key)}
-                    style={{
-                      border: isActive ? '1px solid #2563eb' : '1px solid #cbd5e1',
-                      background: isActive ? '#f8fbff' : '#ffffff',
-                      color: isActive ? '#1d4ed8' : '#475569',
-                      borderRadius: '8px',
-                      fontSize: '0.76rem',
-                      fontWeight: 700,
-                      padding: '6px 12px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {filter.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div style={{ overflowY: 'auto', flex: 1 }}>
-              {!filteredNotifications.length ? (
-                <div style={{
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#64748b',
-                  fontWeight: 600,
-                  padding: '20px',
-                  textAlign: 'center',
-                }}>
-                  No notifications yet
-                </div>
-              ) : (
-                filteredNotifications.map((item) => {
-                  const selected = item.id === selectedId;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleSelectNotification(item)}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        border: 'none',
-                        borderBottom: '1px solid #f1f5f9',
-                        borderLeft: item.read ? '3px solid transparent' : '3px solid #2563eb',
-                        background: selected ? '#f8fbff' : item.read ? '#fbfdff' : '#ffffff',
-                        cursor: 'pointer',
-                        padding: '12px 14px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', minWidth: 0 }}>
-                          <span style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '999px',
-                            marginTop: '7px',
-                            flexShrink: 0,
-                            background: getNotificationKind(item.type) === 'BOOKING'
-                              ? '#0ea5e9'
-                              : getNotificationKind(item.type) === 'TICKET' || getNotificationKind(item.type) === 'COMMENT'
-                                ? '#2563eb'
-                                : '#64748b',
-                          }} />
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{
-                              color: '#0f172a',
-                              fontWeight: item.read ? 600 : 800,
-                              fontSize: '0.9rem',
-                              marginBottom: '2px',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}>
-                              {item.title}
-                            </div>
-                            <div style={{
-                              color: '#475569',
-                              fontSize: '0.7rem',
-                              fontWeight: 700,
-                              marginBottom: '3px',
-                              letterSpacing: '0.04em',
-                            }}>
-                              {typeLabel(item.type)}
-                            </div>
-                            <div style={{
-                              color: '#64748b',
-                              fontSize: '0.82rem',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}>
-                              {truncate(item.message, 60)}
-                            </div>
-                          </div>
-                        </div>
-                        <span style={{
-                          color: '#64748b',
-                          fontSize: '0.72rem',
-                          flexShrink: 0,
-                          marginTop: '2px',
-                        }}>
-                          {timeAgo(item.createdAt)}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          <div style={{
-            border: '1px solid #e2e8f0',
-            borderRadius: '12px',
-            background: '#ffffff',
-            boxShadow: '0 4px 14px rgba(15, 23, 42, 0.04)',
-            padding: '18px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}>
-            {!selectedNotification ? (
-              <div style={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#64748b',
-                fontWeight: 600,
-                textAlign: 'center',
-              }}>
-                Select a notification to view details
-              </div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{
-                      border: '1px solid #cbd5e1',
-                      color: '#334155',
-                      background: '#f8fafc',
-                      borderRadius: '8px',
-                      padding: '4px 10px',
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                    }}>
-                      {typeLabel(selectedNotification.type)}
+      {/* ── Main Workspace ── */}
+      <div style={{ maxWidth: '840px', margin: '-50px auto 0', padding: '0 24px' }}>
+        <div style={{ 
+          background: '#FFFFFF', borderRadius: '24px', padding: '32px', 
+          boxShadow: '0 20px 60px -12px rgba(0,0,0,0.08)', border: '1px solid #F1F5F9'
+        }}>
+          
+          {/* Refined Toolbar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', background: '#F8FAFC', padding: '4px', borderRadius: '14px', border: '1px solid #F1F5F9' }}>
+              {['ALL', 'UNREAD', 'TICKETS', 'BOOKINGS', 'SYSTEM'].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  style={{
+                    padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 600,
+                    background: activeFilter === f ? '#FFFFFF' : 'transparent',
+                    color: activeFilter === f ? '#1E3A8A' : '#64748B',
+                    boxShadow: activeFilter === f ? '0 4px 10px rgba(0,0,0,0.05)' : 'none',
+                    border: 'none', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()} 
+                  {f === 'UNREAD' && unreadCount > 0 && (
+                    <span style={{ marginLeft: '4px', background: '#1E3A8A', color: '#FFF', padding: '1px 6px', borderRadius: '99px', fontSize: '0.7rem' }}>
+                      {unreadCount}
                     </span>
-                  </div>
+                  )}
+                </button>
+              ))}
+            </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {getNavigatePath(selectedNotification) && (
-                      <button
-                        type="button"
-                        onClick={handleNavigate}
-                        disabled={!canNavigate}
-                        style={{
-                          border: '1px solid #cbd5e1',
-                          background: canNavigate ? '#ffffff' : '#f8fafc',
-                          color: canNavigate ? '#1d4ed8' : '#94a3b8',
-                          borderRadius: '8px',
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          padding: '7px 12px',
-                          cursor: canNavigate ? 'pointer' : 'not-allowed',
-                          opacity: canNavigate ? 1 : 0.9,
-                        }}
-                      >
-                        Navigate
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={handleDeleteSelected}
-                      style={{
-                        border: '1px solid #fecaca',
-                        background: '#fff7f7',
-                        color: '#b91c1c',
-                        borderRadius: '8px',
-                        fontSize: '0.82rem',
-                        fontWeight: 700,
-                        padding: '7px 10px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                <h3 style={{
-                  margin: '14px 0 10px 0',
-                  color: '#0f172a',
-                  fontSize: '1.28rem',
-                  fontWeight: 800,
-                  letterSpacing: '-0.02em',
-                }}>
-                  {selectedNotification.title}
-                </h3>
-
-                <div style={{
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '10px',
-                  padding: '14px',
-                  background: '#fcfdff',
-                }}>
-                  <div style={{
-                    color: '#334155',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}>
-                    Detailed Message
-                  </div>
-
-                  {relatedLoading ? (
-                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.92rem' }}>
-                      Loading related details...
-                    </p>
-                  ) : (
-                    <p style={{
-                      margin: 0,
-                      color: '#334155',
-                      fontSize: '0.95rem',
-                      lineHeight: 1.7,
-                      whiteSpace: 'pre-wrap',
-                    }}>
-                      {relatedDetails?.message || selectedNotification.message}
-                    </p>
-                  )}
-
-                  {relatedError && (
-                    <p style={{ margin: '8px 0 0', color: '#b45309', fontSize: '0.82rem' }}>
-                      {relatedError}
-                    </p>
-                  )}
-                </div>
-
-                <div style={{
-                  marginTop: '16px',
-                  color: '#334155',
-                  fontSize: '0.9rem',
-                  lineHeight: 1.6,
-                  display: 'grid',
-                  gap: '6px',
-                }}>
-                  {relatedDetails?.kind === 'TICKET' && relatedDetails.resourceLocation && (
-                    <div><strong>Location:</strong> {relatedDetails.resourceLocation}</div>
-                  )}
-                  {relatedDetails?.kind === 'TICKET' && relatedDetails.category && (
-                    <div><strong>Category:</strong> {relatedDetails.category.replaceAll('_', ' ')}</div>
-                  )}
-                  {relatedDetails?.kind === 'BOOKING' && relatedDetails.resourceId && (
-                    <div><strong>Resource:</strong> {relatedDetails.resourceId}</div>
-                  )}
-                  {relatedDetails?.kind === 'BOOKING' && relatedDetails.startTime && (
-                    <div><strong>Start:</strong> {new Date(relatedDetails.startTime).toLocaleString()}</div>
-                  )}
-                  {relatedDetails?.kind === 'BOOKING' && relatedDetails.endTime && (
-                    <div><strong>End:</strong> {new Date(relatedDetails.endTime).toLocaleString()}</div>
-                  )}
-                  {relatedDetails?.kind === 'BOOKING' && Number.isInteger(relatedDetails.expectedAttendees) && (
-                    <div><strong>Expected Attendees:</strong> {relatedDetails.expectedAttendees}</div>
-                  )}
-                  {relatedDetails?.status && (
-                    <div><strong>Status:</strong> {relatedDetails.status.replaceAll('_', ' ')}</div>
-                  )}
-                </div>
-
-                <div style={{
-                  marginTop: '18px',
-                  borderTop: '1px solid #f1f5f9',
-                  paddingTop: '14px',
-                  color: '#64748b',
-                  fontSize: '0.88rem',
-                  display: 'grid',
-                  gap: '8px',
-                }}>
-                  <div>
-                    <strong style={{ color: '#334155' }}>Timestamp:</strong>{' '}
-                    {selectedNotification.createdAt
-                      ? new Date(selectedNotification.createdAt).toLocaleString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })
-                      : 'N/A'}
-                  </div>
-                  {selectedNotification.referenceId && (
-                    <div>
-                      <strong style={{ color: '#334155' }}>Related ID:</strong> {selectedNotification.referenceId}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+            <button 
+              onClick={handleMarkAllRead}
+              disabled={unreadCount === 0}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#1E3A8A', opacity: unreadCount === 0 ? 0.4 : 1 }}
+            >
+              <MailOpen size={16} /> Mark all read
+            </button>
           </div>
+
+          {/* Elegant Search */}
+          <div style={{ position: 'relative', marginBottom: '32px' }}>
+            <Search size={18} color="#94A3B8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input 
+              type="text" 
+              placeholder="Search activities..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ 
+                width: '100%', padding: '12px 16px 12px 48px', borderRadius: '12px', 
+                border: '1px solid #E2E8F0', fontSize: '0.95rem', outline: 'none', 
+                background: '#FDFDFD', transition: 'all 0.2s', color: '#1E293B'
+              }}
+            />
+          </div>
+
+          {/* Logic Area */}
+          {error ? (
+            <div style={{ textAlign: 'center', padding: '80px 0' }}>
+              <AlertCircle size={40} color="#EF4444" style={{ marginBottom: '16px' }} />
+              <p style={{ fontWeight: 600, color: '#DC2626' }}>{error}</p>
+              <button onClick={fetchNotifications} style={{ marginTop: '16px', color: '#1E3A8A', fontWeight: 700 }}>Try reaching server again</button>
+            </div>
+          ) : loading ? (
+            <div style={{ textAlign: 'center', padding: '80px 0' }}>
+              <div style={{ width: '32px', height: '32px', border: '2px solid #F1F5F9', borderTopColor: '#1E3A8A', borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 0.8s linear infinite' }} />
+              <p style={{ fontSize: '0.9rem', color: '#64748B' }}>Fetching updates...</p>
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '80px 0' }}>
+              <Bell size={40} color="#E2E8F0" style={{ marginBottom: '16px' }} />
+              <p style={{ color: '#64748B', fontWeight: 500 }}>All notifications caught up.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {filteredItems.map(n => (
+                <div
+                  key={n.id}
+                  onClick={() => {
+                    handleMarkAsRead(n.id);
+                    if (n.referenceId) {
+                      const path = n.type?.includes('BOOKING') ? '/bookings' : `/tickets/${n.referenceId}`;
+                      navigate(path);
+                    }
+                  }}
+                  style={{
+                    display: 'flex', gap: '18px', padding: '20px 24px',
+                    background: '#FFFFFF', borderRadius: '16px',
+                    border: '1px solid #F1F5F9', transition: 'all 0.2s ease',
+                    cursor: 'pointer', position: 'relative'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#F1F5F9'; }}
+                >
+                  {!n.read && (
+                    <div style={{ position: 'absolute', left: '10px', top: '24px', width: '6px', height: '6px', borderRadius: '50%', background: '#2563EB' }} />
+                  )}
+                  
+                  <div style={{ 
+                    width: '44px', height: '44px', borderRadius: '12px', 
+                    background: n.read ? '#F8FAFC' : '#EFF6FF',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, border: '1px solid #F1F5F9'
+                  }}>
+                    {getIcon(n.type)}
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '2px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>{n.title}</h4>
+                      <span style={{ fontSize: '0.75rem', color: '#94A3B8', flexShrink: 0, marginTop: '2px' }}>{getTimeAgo(n.createdAt)}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', lineHeight: '1.5' }}>{n.message}</p>
+                  </div>
+
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
+                    style={{ padding: '8px', borderRadius: '8px', color: '#E2E8F0', alignSelf: 'center', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = '#FEF2F2'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#E2E8F0'; e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </section>
+      
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
+    </div>
   );
 };
 
