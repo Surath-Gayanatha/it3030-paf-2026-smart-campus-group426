@@ -23,6 +23,7 @@ import AdminLogin from './pages/AdminLogin';
 import Resources from './pages/Resources';
 import AddFacility from './pages/AddFacility';
 import FacilityDetail from './pages/FacilityDetail';
+import NotificationPreferences from './pages/NotificationPreferences';
 
 const HomePage = () => {
   return (
@@ -91,6 +92,22 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route
+              path="/notifications/preferences"
+              element={(
+                <ProtectedRoute allowedRoles={['LECTURER', 'USER', 'TECHNICIAN', 'ADMIN']}>
+                  <NotificationPreferences />
+                </ProtectedRoute>
+              )}
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/admin-ticketing" 
               element={
@@ -104,14 +121,6 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'TECHNICIAN']}>
                   <AnalyticsDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/notifications" 
-              element={
-                <ProtectedRoute>
-                  <NotificationsPage />
                 </ProtectedRoute>
               } 
             />

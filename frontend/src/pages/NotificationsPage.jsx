@@ -4,7 +4,7 @@ import {
   Bell, CheckCircle2, AlertCircle, 
   Trash2, MailOpen, Clock, 
   ShieldCheck, Wrench, Info, X, 
-  Search, ChevronRight, Activity
+  Search, ChevronRight, Activity, Calendar, XCircle
 } from 'lucide-react';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
@@ -75,6 +75,9 @@ const NotificationsPage = () => {
     switch (type) {
       case 'TICKET_ASSIGNED':       return <Wrench {...iconProps} style={{ color: '#2563EB' }} />;
       case 'TICKET_STATUS_CHANGED': return <CheckCircle2 {...iconProps} style={{ color: '#059669' }} />;
+      case 'BOOKING_APPROVED':      return <CheckCircle2 {...iconProps} style={{ color: '#10B981' }} />;
+      case 'BOOKING_REJECTED':      return <XCircle {...iconProps} style={{ color: '#EF4444' }} />;
+      case 'BOOKING_CANCELLED':     return <AlertCircle {...iconProps} style={{ color: '#F59E0B' }} />;
       case 'ROLE_REVIEW':           return <ShieldCheck {...iconProps} style={{ color: '#4F46E5' }} />;
       case 'NEW_COMMENT':           return <Info {...iconProps} style={{ color: '#D97706' }} />;
       default:                      return <Bell {...iconProps} style={{ color: '#475569' }} />;
@@ -86,7 +89,8 @@ const NotificationsPage = () => {
                           n.message.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
     if (activeFilter === 'UNREAD') return !n.read;
-    if (activeFilter === 'TICKETS') return n.type === 'TICKET_ASSIGNED' || n.type === 'STATUS_CHANGE';
+    if (activeFilter === 'TICKETS') return n.type?.includes('TICKET') || n.type === 'NEW_COMMENT';
+    if (activeFilter === 'BOOKINGS') return n.type?.includes('BOOKING');
     if (activeFilter === 'SYSTEM') return n.type === 'ROLE_REVIEW';
     return true;
   });
@@ -128,7 +132,7 @@ const NotificationsPage = () => {
           {/* Refined Toolbar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '20px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '8px', background: '#F8FAFC', padding: '4px', borderRadius: '14px', border: '1px solid #F1F5F9' }}>
-              {['ALL', 'UNREAD', 'TICKETS', 'SYSTEM'].map(f => (
+              {['ALL', 'UNREAD', 'TICKETS', 'BOOKINGS', 'SYSTEM'].map(f => (
                 <button
                   key={f}
                   onClick={() => setActiveFilter(f)}
@@ -140,7 +144,8 @@ const NotificationsPage = () => {
                     border: 'none', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 >
-                  {f} {f === 'UNREAD' && unreadCount > 0 && (
+                  {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()} 
+                  {f === 'UNREAD' && unreadCount > 0 && (
                     <span style={{ marginLeft: '4px', background: '#1E3A8A', color: '#FFF', padding: '1px 6px', borderRadius: '99px', fontSize: '0.7rem' }}>
                       {unreadCount}
                     </span>
@@ -198,7 +203,10 @@ const NotificationsPage = () => {
                   key={n.id}
                   onClick={() => {
                     handleMarkAsRead(n.id);
-                    if (n.referenceId) navigate(`/tickets/${n.referenceId}`);
+                    if (n.referenceId) {
+                      const path = n.type?.includes('BOOKING') ? '/bookings' : `/tickets/${n.referenceId}`;
+                      navigate(path);
+                    }
                   }}
                   style={{
                     display: 'flex', gap: '18px', padding: '20px 24px',
