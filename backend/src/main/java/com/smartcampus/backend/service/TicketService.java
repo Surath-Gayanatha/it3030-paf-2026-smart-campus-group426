@@ -157,7 +157,7 @@ public class TicketService {
                     request.getAssignedTechnicianId(),
                     "Ticket Assigned",
                     "You have been assigned to handle maintenance ticket #" + ticket.getId().substring(Math.max(0, ticket.getId().length() - 5)),
-                    NotificationType.TICKET_STATUS_CHANGED,
+                    NotificationType.TICKET_ASSIGNED,
                     ticket.getId()
             );
         }

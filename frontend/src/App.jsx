@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminPanel from './pages/AdminPanel';
 import BookingsPage from './pages/BookingsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import TicketList from './pages/TicketList';
 import TicketCreate from './pages/TicketCreate';
@@ -103,6 +104,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'TECHNICIAN']}>
                   <AnalyticsDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
                 </ProtectedRoute>
               } 
             />
