@@ -199,3 +199,214 @@ p  { color: var(--color-text-secondary); }
   pointer-events: none;
 }
 
+/* ── Notifications Center ── */
+.notification {
+  position: relative;
+}
+
+.notification__trigger {
+  position: relative;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  cursor: pointer;
+}
+
+.notification__trigger:hover {
+  background: #F1F5F9;
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.notification__badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #EF4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.notification__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  width: 380px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 1000;
+  overflow: hidden;
+  animation: notificationEntry 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+@keyframes notificationEntry {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.notification__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(248, 250, 252, 0.5);
+}
+
+.notification__header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.marks-read-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.marks-read-btn:hover {
+  background: #EFF6FF;
+}
+
+.notification__list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification__item {
+  padding: 16px 20px;
+  display: flex;
+  gap: 14px;
+  border-bottom: 1px solid #F8FAFC;
+  transition: all 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+
+.notification__item:hover {
+  background: #F8FAFC;
+}
+
+.notification__item--unread {
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.notification__item--unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-primary);
+}
+
+.notification__icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification__content {
+  flex: 1;
+}
+
+.notification__item-title {
+  margin: 0 0 2px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.notification__item-msg {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+.notification__item-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.notification__delete-btn {
+  opacity: 0;
+  padding: 6px;
+  color: #94A3B8;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.notification__item:hover .notification__delete-btn {
+  opacity: 1;
+}
+
+.notification__delete-btn:hover {
+  color: #EF4444;
+  background: #FEF2F2;
+}
+
+.notification__footer {
+  padding: 12px;
+  text-align: center;
+  border-top: 1px solid #F1F5F9;
+  background: #FDFDFD;
+}
+
+.notification__view-all {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748B;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.notification__view-all:hover {
+  color: var(--color-primary);
+}
+
+.notification__empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94A3B8;
+}
+

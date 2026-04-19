@@ -10,6 +10,7 @@ import com.smartcampus.backend.model.NotificationType;
 import com.smartcampus.backend.model.User;
 import com.smartcampus.backend.model.Role;
 import com.smartcampus.backend.repository.TicketRepository;
+import com.smartcampus.backend.repository.UserRepository;
 import com.smartcampus.backend.services.NotificationService;
 import com.smartcampus.backend.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class TicketService {
     private final CloudinaryService cloudinaryService;
     private final NotificationService notificationService;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     // Helper: get current username safely (defaults to 'anonymous' when security is open)
     private String getCurrentUser() {
@@ -62,7 +64,20 @@ public class TicketService {
                 .status(TicketStatus.OPEN)
                 .build();
 
-        return mapToResponse(ticketRepository.save(ticket));
+            Ticket savedTicket = ticketRepository.save(ticket);
+
+            List<User> admins = userRepository.findByRole(Role.ADMIN);
+            for (User admin : admins) {
+                notificationService.createNotification(
+                    admin.getId(),
+                    "New Ticket Created",
+                    "A new support ticket has been submitted: Ticket #" + savedTicket.getId().substring(Math.max(0, savedTicket.getId().length() - 5)),
+                    NotificationType.NEW_TICKET_CREATED,
+                    savedTicket.getId()
+                );
+            }
+
+            return mapToResponse(savedTicket);
     }
 
     // ── READ ──────────────────────────────────────────────────────────────────
@@ -157,7 +172,7 @@ public class TicketService {
                     request.getAssignedTechnicianId(),
                     "Ticket Assigned",
                     "You have been assigned to handle maintenance ticket #" + ticket.getId().substring(Math.max(0, ticket.getId().length() - 5)),
-                    NotificationType.TICKET_STATUS_CHANGED,
+                    NotificationType.TICKET_ASSIGNED,
                     ticket.getId()
             );
         }

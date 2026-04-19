@@ -20,6 +20,9 @@ public class NotificationService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private NotificationPreferenceService notificationPreferenceService;
+
     public List<Notification> getMyNotifications() {
         User currentUser = userService.getCurrentUser();
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
@@ -67,6 +70,10 @@ public class NotificationService {
             NotificationType type,
             String referenceId
     ) {
+        if (!notificationPreferenceService.shouldNotify(userId, type)) {
+            return null;
+        }
+
         Notification notification = Notification.builder()
                 .userId(userId)
                 .title(title)

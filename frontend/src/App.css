@@ -966,6 +966,8 @@
   width: 360px;
   max-height: 420px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -994,8 +996,34 @@
 }
 
 .notification__list {
-  max-height: 360px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
+}
+
+.notification__footer {
+  border-top: 1px solid var(--color-border);
+  padding: 8px 16px;
+  text-align: center;
+}
+
+.notification__footer-link {
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: #2563eb;
+  font-weight: 500;
+  padding: 8px 0;
+}
+
+.notification__footer-subtle {
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  padding: 2px 0;
 }
 
 .notification__item {

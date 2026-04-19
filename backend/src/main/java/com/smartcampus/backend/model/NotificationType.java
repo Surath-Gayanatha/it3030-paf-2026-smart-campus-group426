@@ -1,9 +1,13 @@
 package com.smartcampus.backend.model;
 
 public enum NotificationType {
+    NEW_BOOKING_REQUEST,
+    NEW_TICKET_CREATED,
+    BOOKING_CANCELLED_ADMIN,
     BOOKING_APPROVED,
     BOOKING_REJECTED,
     BOOKING_CANCELLED,
     TICKET_STATUS_CHANGED,
+    TICKET_ASSIGNED,
     NEW_COMMENT
 }
