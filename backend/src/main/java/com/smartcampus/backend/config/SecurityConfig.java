@@ -1,9 +1,7 @@
 package com.smartcampus.backend.config;
-
 import com.smartcampus.backend.security.jwt.JwtAuthenticationFilter;
 import com.smartcampus.backend.security.jwt.JwtTokenProvider;
 import com.smartcampus.backend.security.oauth2.OAuth2AuthenticationSuccessHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +29,7 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
 
-    @Autowired
+
     public SecurityConfig(OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
                           JwtTokenProvider jwtTokenProvider) {
         this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
