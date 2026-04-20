@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 import com.smartcampus.backend.dto.TicketStatsResponse;
@@ -185,6 +186,19 @@ public class TicketService {
             ticket.setRejectionReason(request.getRejectionReason());
         }
 
+        // --- SLA Timers Logic ---
+        if (ticket.getFirstResponseAt() == null && (ticket.getAssignedTechnicianId() != null || ticket.getStatus() != TicketStatus.OPEN)) {
+            ticket.setFirstResponseAt(LocalDateTime.now());
+        }
+        
+        if (ticket.getStatus() == TicketStatus.RESOLVED || ticket.getStatus() == TicketStatus.CLOSED) {
+            if (ticket.getResolvedAt() == null) {
+                ticket.setResolvedAt(LocalDateTime.now());
+            }
+        } else {
+            ticket.setResolvedAt(null);
+        }
+
         // --- Post-update Notifications ---
         if (ticket.getStatus() != oldStatus) {
             String shortId = ticket.getId().substring(Math.max(0, ticket.getId().length() - 5));
@@ -312,6 +326,8 @@ public class TicketService {
                 .rejectionReason(ticket.getRejectionReason())
                 .imageUrls(ticket.getImageUrls())
                 .createdBy(ticket.getCreatedBy())
+                .firstResponseAt(ticket.getFirstResponseAt())
+                .resolvedAt(ticket.getResolvedAt())
                 .createdAt(ticket.getCreatedAt())
                 .updatedAt(ticket.getUpdatedAt())
                 .build();

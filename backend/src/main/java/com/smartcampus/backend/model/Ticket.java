@@ -44,6 +44,9 @@ public class Ticket {
 
     private String createdBy;
 
+    private LocalDateTime firstResponseAt;
+    private LocalDateTime resolvedAt;
+
     @CreatedDate
     private LocalDateTime createdAt;
 

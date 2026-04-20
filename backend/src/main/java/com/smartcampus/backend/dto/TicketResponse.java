@@ -28,6 +28,8 @@ public class TicketResponse {
     private String rejectionReason;
     private List<String> imageUrls;
     private String createdBy;
+    private LocalDateTime firstResponseAt;
+    private LocalDateTime resolvedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

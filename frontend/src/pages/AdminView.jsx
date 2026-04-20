@@ -726,6 +726,16 @@ const AdminView = () => {
           {filtered.map((ticket, idx) => {
             const pMeta = PRIORITY[ticket.priority] || PRIORITY.MEDIUM;
             const avatarBg = techAvatarColor(ticket.assignedTechnician);
+            
+            // SLA Logic
+            const isSLABreach = ticket.status === 'OPEN' && (new Date() - new Date(ticket.createdAt)) > (24 * 60 * 60 * 1000);
+            let resolutionText = null;
+            if ((ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') && ticket.resolvedAt) {
+              const diff = new Date(ticket.resolvedAt) - new Date(ticket.createdAt);
+              const hrs = Math.round(diff / (1000 * 60 * 60));
+              resolutionText = `Resolved in ${hrs === 0 ? '<1' : hrs}h`;
+            }
+
             return (
               <div
                 key={ticket.id}
@@ -736,11 +746,11 @@ const AdminView = () => {
                   display:'grid', gap:'0',
                   gridTemplateColumns:'88px 1fr 120px 108px 152px 148px 140px',
                   padding:'16px 20px',
-                  background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.012)',
+                  background: isSLABreach ? 'rgba(239, 68, 68, 0.04)' : (idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.012)'),
                   transition:'background 0.15s',
                 }}
               >
-                {/* ID + time */}
+                {/* ID + time + SLA */}
                 <div>
                   <p style={{ color:'#818CF8', fontFamily:'JetBrains Mono,monospace', fontSize:'0.82rem', fontWeight:600, margin:'0 0 3px' }}>
                     #{ticket.id.slice(-5)}
@@ -748,6 +758,16 @@ const AdminView = () => {
                   <p style={{ color:TOKEN.textMut, fontSize:'0.72rem', margin:0 }}>
                     {timeSince(ticket.createdAt)}
                   </p>
+                  {isSLABreach && (
+                    <span style={{ display: 'inline-block', marginTop: '4px', background: '#FEF2F2', color: '#EF4444', border: '1px solid #FCA5A5', padding: '2px 4px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                      SLA Breach
+                    </span>
+                  )}
+                  {resolutionText && (
+                    <span style={{ display: 'inline-block', marginTop: '4px', background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', padding: '2px 4px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>
+                      {resolutionText}
+                    </span>
+                  )}
                 </div>
 
                 {/* Description + reporter */}
